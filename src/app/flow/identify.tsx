@@ -8,7 +8,9 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BorderRadius, Colors, FlatBorder, Spacing, Typography } from '@/constants/theme';
 import { useItemFlow } from '@/contexts/item-context';
+import { useAuth } from '@/hooks/use-auth';
 import { identifyWithVision } from '@/services/vision';
+import { consumeRateLimit, formatResetIn, RateLimits } from '@/utils/rate-limit';
 import type { ItemCategory } from '@/types/item';
 
 const CATEGORY_LABELS: Record<ItemCategory, string> = {
@@ -23,6 +25,7 @@ const CATEGORY_LABELS: Record<ItemCategory, string> = {
 
 export default function IdentifyScreen() {
   const { photoUri, photoBase64, identification, setIdentification } = useItemFlow();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(!identification);
   const [error, setError] = useState('');
 
@@ -32,6 +35,21 @@ export default function IdentifyScreen() {
       setLoading(false);
       return;
     }
+
+    // Soft per-device quota on paid Vision calls (real enforcement is server-side, Phase 4).
+    const limit = await consumeRateLimit(
+      `identify:${user?.id ?? 'anon'}`,
+      RateLimits.IDENTIFY.limit,
+      RateLimits.IDENTIFY.windowMs
+    );
+    if (!limit.allowed) {
+      setError(
+        `You've hit the daily scan limit (${limit.limit}/day). Try again in ${formatResetIn(limit.resetsAt)}.`
+      );
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
