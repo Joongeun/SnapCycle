@@ -1,4 +1,5 @@
-import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { StatsCard } from '@/components/leaderboard/stats-card';
@@ -12,8 +13,15 @@ import type { LeaderboardEntry } from '@/services/items';
 
 export default function LeaderboardScreen() {
   const { user } = useAuth();
-  const { profile } = useProfile();
-  const { entries, loading } = useLeaderboard();
+  const { profile, reload: reloadProfile } = useProfile();
+  const { entries, loading, reload } = useLeaderboard();
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function onRefresh() {
+    setRefreshing(true);
+    await Promise.all([reload(), reloadProfile()]);
+    setRefreshing(false);
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -41,6 +49,13 @@ export default function LeaderboardScreen() {
             <Row entry={item} rank={index + 1} isMe={item.id === user?.id} />
           )}
           contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={Colors.light.primary}
+            />
+          }
           ListEmptyComponent={
             !loading ? (
               <ThemedText style={[Typography.caption, styles.empty]} themeColor="textSecondary">

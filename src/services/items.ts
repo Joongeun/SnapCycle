@@ -108,6 +108,14 @@ export async function getProfile(userId: string): Promise<UserProfile | null> {
   };
 }
 
+export async function updateDefaultLocation(userId: string, location: string): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ default_location: location })
+    .eq('id', userId);
+  if (error) throw error;
+}
+
 export interface LeaderboardEntry {
   id: string;
   displayName: string;

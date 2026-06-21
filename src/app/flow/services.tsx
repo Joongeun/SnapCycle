@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 
@@ -9,13 +9,26 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing, Typography } from '@/constants/theme';
 import { useItemFlow } from '@/contexts/item-context';
+import { useAuth } from '@/hooks/use-auth';
 import { discoverServices } from '@/services/api';
+import { getProfile, updateDefaultLocation } from '@/services/items';
 import type { ServiceOption as ServiceOptionType } from '@/types/api';
 
 export default function ServicesScreen() {
   const { identification, decision, setSelectedService } = useItemFlow();
+  const { user } = useAuth();
 
   const [location, setLocation] = useState('');
+
+  // Prefill from the user's saved default location.
+  useEffect(() => {
+    if (!user) return;
+    getProfile(user.id)
+      .then((p) => {
+        if (p?.defaultLocation) setLocation(p.defaultLocation);
+      })
+      .catch(() => {});
+  }, [user]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [services, setServices] = useState<ServiceOptionType[] | null>(null);
@@ -43,6 +56,9 @@ export default function ServicesScreen() {
       setServices(res.services);
       if (res.services.length === 0) {
         setError('No services found. Try a broader location.');
+      } else if (user) {
+        // Remember the location for next time (best-effort).
+        updateDefaultLocation(user.id, location.trim()).catch(() => {});
       }
     } catch (e: any) {
       setError(e.message ?? 'Service discovery failed');

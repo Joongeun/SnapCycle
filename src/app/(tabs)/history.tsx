@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
@@ -18,8 +18,15 @@ const FILTERS: { label: string; value: Decision | 'ALL' }[] = [
 ];
 
 export default function HistoryScreen() {
-  const { items, loading } = useItems();
+  const { items, loading, reload } = useItems();
   const [filter, setFilter] = useState<Decision | 'ALL'>('ALL');
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function onRefresh() {
+    setRefreshing(true);
+    await reload();
+    setRefreshing(false);
+  }
 
   const filtered = useMemo(
     () => (filter === 'ALL' ? items : items.filter((i) => i.decision === filter)),
@@ -65,6 +72,13 @@ export default function HistoryScreen() {
               <ItemCard item={item} onPress={() => router.push(`/item/${item.id}` as any)} />
             )}
             contentContainerStyle={styles.list}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={Colors.light.primary}
+              />
+            }
             ListEmptyComponent={
               <View style={styles.center}>
                 <ThemedText style={Typography.bodyBold}>Nothing here yet</ThemedText>
