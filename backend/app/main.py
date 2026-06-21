@@ -17,14 +17,18 @@ from app.services.item_index import init_item_index
 # live client to report to. No-ops cleanly when SENTRY_DSN is unset.
 if settings.sentry_dsn:
     import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.starlette import StarletteIntegration
 
     sentry_sdk.init(
         dsn=settings.sentry_dsn,
         environment=settings.sentry_environment,
         traces_sample_rate=settings.sentry_traces_sample_rate,
-        # We capture exceptions explicitly inside graceful-degradation handlers;
-        # keep the default integrations so unhandled errors are still reported.
         send_default_pii=False,
+        integrations=[
+            StarletteIntegration(transaction_style="endpoint"),
+            FastApiIntegration(transaction_style="endpoint"),
+        ],
     )
 
 # Register Phoenix tracing before the app + instrumented libraries are first used.
@@ -70,3 +74,12 @@ app.include_router(rrr.router, prefix="/api", tags=["rrr"])
 @app.get("/health")
 async def health():
     return {"ok": True, "status": "ok"}
+
+
+@app.get("/debug/sentry-test")
+async def sentry_test():
+    """Send a test event to Sentry. Remove or protect in production."""
+    import sentry_sdk
+
+    sentry_sdk.capture_message("RRR backend Sentry test ping", level="info")
+    return {"sent": True, "sentry_enabled": bool(settings.sentry_dsn)}
