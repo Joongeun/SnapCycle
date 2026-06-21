@@ -32,8 +32,9 @@ export interface ServicesResponse {
 }
 
 export interface ScheduleRequest {
-  serviceId: string;
-  itemId: string;
+  serviceName: string;
+  itemName: string;
+  decision: string;
   date: string;
 }
 
