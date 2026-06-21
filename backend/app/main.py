@@ -1,7 +1,10 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api import location, recycle, rrr
 from app.config import settings
@@ -26,6 +29,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(_request: Request, exc: StarletteHTTPException):
+    """Expo client reads `error.message`; FastAPI defaults to `detail`."""
+    message = exc.detail if isinstance(exc.detail, str) else "Request failed"
+    return JSONResponse(status_code=exc.status_code, content={"message": message})
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(_request: Request, _exc: RequestValidationError):
+    return JSONResponse(status_code=422, content={"message": "Invalid request body"})
+
 
 app.include_router(recycle.router, prefix="/api/recycle", tags=["recycle"])
 app.include_router(location.router, prefix="/api/location", tags=["location"])

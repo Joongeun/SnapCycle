@@ -22,7 +22,11 @@ async function apiPost<T>(path: string, body: unknown): Promise<T> {
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message ?? `HTTP ${response.status}`);
+    const message =
+      error.message ??
+      (typeof error.detail === 'string' ? error.detail : null) ??
+      `HTTP ${response.status}`;
+    throw new Error(message);
   }
 
   return response.json();

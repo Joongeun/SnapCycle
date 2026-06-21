@@ -15,7 +15,9 @@ cp app/.env.example app/.env   # fill in API keys
 
 ```bash
 docker run -d --name recycle-redis -p 6379:6379 redis/redis-stack-server:latest
-uvicorn app.main:app --reload --port 8000
+
+# Simulator: localhost is fine. Physical device: bind all interfaces.
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ## Mobile app
