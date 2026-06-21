@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Pressable, StyleSheet, View, Image, ActivityIndicator } from 'react-native';
+import { Pressable, StyleSheet, View, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, type CameraType } from 'expo-camera';
 import { router } from 'expo-router';

@@ -84,7 +84,7 @@ export default function ServicesScreen() {
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <ThemedText style={Typography.h2}>Find services near you</ThemedText>
         <ThemedText style={[Typography.body, styles.sub]} themeColor="textSecondary">
-          We'll search the web for real options to {decision?.toLowerCase()} your{' '}
+          We’ll search the web for real options to {decision?.toLowerCase()} your{' '}
           {identification?.itemName}.
         </ThemedText>
 

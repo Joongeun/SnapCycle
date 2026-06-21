@@ -89,7 +89,7 @@ export default function IdentifyScreen() {
         {!loading && error ? (
           <View style={styles.statusBlock}>
             <ThemedText style={[Typography.h3, { color: Colors.light.error }]}>
-              Hmm, that didn't work
+              Hmm, that didn’t work
             </ThemedText>
             <ThemedText style={[Typography.caption, styles.statusText]} themeColor="textSecondary">
               {error}

@@ -50,13 +50,13 @@ export function Confetti() {
   return (
     <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
       {PIECES.map((p, i) => (
-        <Piece key={i} piece={p} progress={progress} />
+        <ConfettiPiece key={i} piece={p} progress={progress} />
       ))}
     </Canvas>
   );
 }
 
-function Piece({ piece, progress }: { piece: Piece; progress: SharedValue<number> }) {
+function ConfettiPiece({ piece, progress }: { piece: Piece; progress: SharedValue<number> }) {
   const transform = useDerivedValue(() => {
     const t = progress.value;
     const y = -30 + t * piece.fall;

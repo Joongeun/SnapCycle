@@ -1,4 +1,4 @@
-import type { Decision, ItemCategory, ItemCondition, ItemIdentification, SelectedService } from './item';
+import type { Decision, ItemCategory, ItemCondition } from './item';
 
 export interface IdentifyRequest {
   image: string; // base64

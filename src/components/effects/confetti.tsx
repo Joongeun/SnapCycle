@@ -8,7 +8,8 @@ const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreCl
 
 const SkiaConfetti: ComponentType | null = isExpoGo
   ? null
-  : require('./confetti.skia').Confetti;
+  : // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('./confetti.skia').Confetti;
 
 export function Confetti() {
   if (!SkiaConfetti) return null;
