@@ -1,4 +1,4 @@
-# RRR2 — Reduce, Reuse, Rehome
+# RRR — Reduce, Reuse, Rehome
 
 A mobile app that helps you decide what to do with your stuff. Photograph a large
 item, let AI identify it, answer a few questions, and get a recommendation to
