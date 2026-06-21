@@ -17,10 +17,15 @@ import { ThemedText } from '@/components/themed-text';
 import { BorderRadius, Colors, FlatBorder, Spacing, Typography } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 
+// In dev, prefill the login form from env so you don't retype an admin account
+// each reload. Set EXPO_PUBLIC_DEV_EMAIL / EXPO_PUBLIC_DEV_PASSWORD in .env.
+const DEV_EMAIL = __DEV__ ? process.env.EXPO_PUBLIC_DEV_EMAIL ?? '' : '';
+const DEV_PASSWORD = __DEV__ ? process.env.EXPO_PUBLIC_DEV_PASSWORD ?? '' : '';
+
 export default function LoginScreen() {
   const { signIn } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(DEV_EMAIL);
+  const [password, setPassword] = useState(DEV_PASSWORD);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
