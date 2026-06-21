@@ -1,4 +1,4 @@
-# RRR Python Backend
+# Snapcycle Python Backend
 
 FastAPI backend: Gemini AI, Browserbase deep search, Redis caching.
 

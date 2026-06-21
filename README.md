@@ -1,4 +1,4 @@
-# RRR — Reduce, Reuse, Rehome
+# Snapcycle
 
 A mobile app that helps you responsibly get rid of large, awkward, or non-traditional
 items. Photograph an item, let AI identify it, and the app figures out the **simplest
