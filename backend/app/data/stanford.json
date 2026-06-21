@@ -1,0 +1,72 @@
+{
+  "id": "stanford",
+  "name": "Palo Alto / Stanford, CA",
+  "jurisdiction": "City of Palo Alto / Santa Clara County",
+  "coordinates": { "lat": 37.4275, "lng": -122.1697 },
+  "documents": [
+    {
+      "id": "plastic-bottle-pet",
+      "title": "Plastic Bottles (#1 PET)",
+      "keywords": ["plastic bottle", "water bottle", "soda bottle", "pet", "#1", "bottle"],
+      "category": "recyclable",
+      "instructions": "Empty, rinse, and place in the blue recycling bin.",
+      "notes": "Palo Alto accepts plastics #1-#7."
+    },
+    {
+      "id": "aluminum-can",
+      "title": "Aluminum Cans",
+      "keywords": ["aluminum", "can", "soda can", "beer can", "metal can"],
+      "category": "recyclable",
+      "instructions": "Empty and rinse. Place in blue recycling bin.",
+      "notes": null
+    },
+    {
+      "id": "cardboard",
+      "title": "Cardboard & Paperboard",
+      "keywords": ["cardboard", "box", "paperboard", "cereal box", "shipping box"],
+      "category": "recyclable",
+      "instructions": "Flatten and remove non-paper packing materials. Place in recycling bin.",
+      "notes": "Soiled cardboard goes in compost."
+    },
+    {
+      "id": "glass-bottle",
+      "title": "Glass Bottles & Jars",
+      "keywords": ["glass", "jar", "wine bottle", "beer bottle"],
+      "category": "recyclable",
+      "instructions": "Empty and rinse. Place in blue recycling bin.",
+      "notes": "No broken glass in bins — wrap and place in landfill cart."
+    },
+    {
+      "id": "food-scraps",
+      "title": "Food Scraps & Compostables",
+      "keywords": ["food", "scraps", "compost", "banana peel", "organic", "leftovers"],
+      "category": "compost",
+      "instructions": "Place in the green compost cart.",
+      "notes": "Palo Alto has curbside compost collection."
+    },
+    {
+      "id": "styrofoam",
+      "title": "Styrofoam / Expanded Polystyrene",
+      "keywords": ["styrofoam", "foam", "polystyrene", "packing peanuts"],
+      "category": "landfill",
+      "instructions": "Not accepted in curbside recycling. Place in black landfill cart.",
+      "notes": null
+    },
+    {
+      "id": "plastic-bag",
+      "title": "Plastic Bags & Film",
+      "keywords": ["plastic bag", "grocery bag", "film", "wrap"],
+      "category": "special",
+      "instructions": "Take clean bags to a store drop-off. Do not put in curbside bins.",
+      "notes": null
+    },
+    {
+      "id": "battery",
+      "title": "Batteries",
+      "keywords": ["battery", "batteries", "lithium", "aa", "aaa"],
+      "category": "special",
+      "instructions": "Take to Palo Alto Household Hazardous Waste or a retailer drop-off.",
+      "notes": null
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "id": "ann_arbor",
+  "name": "Ann Arbor, MI",
+  "jurisdiction": "City of Ann Arbor / Washtenaw County",
+  "coordinates": { "lat": 42.2780, "lng": -83.7382 },
+  "documents": [
+    {
+      "id": "plastic-bottle-pet",
+      "title": "Plastic Bottles (#1 PET)",
+      "keywords": ["plastic bottle", "water bottle", "soda bottle", "pet", "#1", "bottle"],
+      "category": "recyclable",
+      "instructions": "Empty, rinse, and place in the recycling bin. Caps can stay on.",
+      "notes": "Ann Arbor accepts plastics #1-#7."
+    },
+    {
+      "id": "aluminum-can",
+      "title": "Aluminum Cans",
+      "keywords": ["aluminum", "can", "soda can", "beer can", "metal can"],
+      "category": "recyclable",
+      "instructions": "Empty and rinse. Place in recycling bin.",
+      "notes": "Michigan 10-cent deposit — return to a bottle return for refund."
+    },
+    {
+      "id": "cardboard",
+      "title": "Cardboard & Paperboard",
+      "keywords": ["cardboard", "box", "paperboard", "cereal box", "shipping box"],
+      "category": "recyclable",
+      "instructions": "Flatten boxes. Remove packing materials. Place in recycling bin.",
+      "notes": null
+    },
+    {
+      "id": "glass-bottle",
+      "title": "Glass Bottles & Jars",
+      "keywords": ["glass", "jar", "wine bottle", "beer bottle"],
+      "category": "recyclable",
+      "instructions": "Empty and rinse. Place in recycling bin.",
+      "notes": "Michigan bottle deposit applies to most beverage containers."
+    },
+    {
+      "id": "food-scraps",
+      "title": "Food Scraps & Compostables",
+      "keywords": ["food", "scraps", "compost", "banana peel", "organic"],
+      "category": "compost",
+      "instructions": "Ann Arbor offers curbside compost collection — place in the compost cart.",
+      "notes": "One of the first US cities with municipal compost pickup."
+    },
+    {
+      "id": "styrofoam",
+      "title": "Styrofoam / Expanded Polystyrene",
+      "keywords": ["styrofoam", "foam", "polystyrene", "packing peanuts"],
+      "category": "landfill",
+      "instructions": "Not accepted in curbside recycling. Place in trash cart.",
+      "notes": null
+    },
+    {
+      "id": "plastic-bag",
+      "title": "Plastic Bags & Film",
+      "keywords": ["plastic bag", "grocery bag", "film", "wrap"],
+      "category": "special",
+      "instructions": "Do NOT place in curbside bins. Take to a store drop-off.",
+      "notes": null
+    },
+    {
+      "id": "battery",
+      "title": "Batteries",
+      "keywords": ["battery", "batteries", "lithium", "aa", "aaa"],
+      "category": "special",
+      "instructions": "Take to Washtenaw County Home Toxics disposal or a retailer drop-off.",
+      "notes": null
+    }
+  ]
+}

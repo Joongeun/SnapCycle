@@ -1,0 +1,80 @@
+{
+  "id": "berkeley",
+  "name": "Berkeley, CA",
+  "jurisdiction": "City of Berkeley / Alameda County",
+  "coordinates": { "lat": 37.8719, "lng": -122.2585 },
+  "documents": [
+    {
+      "id": "plastic-bottle-pet",
+      "title": "Plastic Bottles (#1 PET)",
+      "keywords": ["plastic bottle", "water bottle", "soda bottle", "pet", "#1", "bottle"],
+      "category": "recyclable",
+      "instructions": "Empty, rinse, and place in the gray recycling cart. Caps and labels can stay on.",
+      "notes": "Berkeley accepts all rigid plastics #1-#7 in the recycling cart."
+    },
+    {
+      "id": "aluminum-can",
+      "title": "Aluminum Cans",
+      "keywords": ["aluminum", "can", "soda can", "beer can", "metal can"],
+      "category": "recyclable",
+      "instructions": "Empty and rinse. Place in gray recycling cart.",
+      "notes": "Crushing is optional but saves space."
+    },
+    {
+      "id": "cardboard",
+      "title": "Cardboard & Paperboard",
+      "keywords": ["cardboard", "box", "paperboard", "cereal box", "shipping box", "amazon box"],
+      "category": "recyclable",
+      "instructions": "Flatten boxes. Remove tape and plastic liners. Place in recycling cart.",
+      "notes": "Greasy pizza boxes go in the green compost cart, not recycling."
+    },
+    {
+      "id": "glass-bottle",
+      "title": "Glass Bottles & Jars",
+      "keywords": ["glass", "jar", "wine bottle", "beer bottle", "glass bottle"],
+      "category": "recyclable",
+      "instructions": "Empty and rinse. Remove lids. Place in gray recycling cart.",
+      "notes": "No window glass, mirrors, or ceramics."
+    },
+    {
+      "id": "food-scraps",
+      "title": "Food Scraps & Compostables",
+      "keywords": ["food", "scraps", "compost", "banana peel", "apple core", "leftovers", "organic"],
+      "category": "compost",
+      "instructions": "Place in the green compost cart. Use a compostable bag or paper liner.",
+      "notes": "Berkeley has mandatory composting for food waste."
+    },
+    {
+      "id": "styrofoam",
+      "title": "Styrofoam / Expanded Polystyrene",
+      "keywords": ["styrofoam", "foam", "polystyrene", "packing peanuts", "eps"],
+      "category": "landfill",
+      "instructions": "Not accepted in curbside recycling. Place in gray landfill cart or take to special drop-off.",
+      "notes": "Check Berkeley's Zero Waste website for foam drop-off events."
+    },
+    {
+      "id": "plastic-bag",
+      "title": "Plastic Bags & Film",
+      "keywords": ["plastic bag", "grocery bag", "film", "wrap", "saran wrap", "ziploc"],
+      "category": "special",
+      "instructions": "Do NOT place in curbside recycling. Take clean bags to a store drop-off bin.",
+      "notes": "Bags jam recycling machinery at the MRF."
+    },
+    {
+      "id": "battery",
+      "title": "Batteries",
+      "keywords": ["battery", "batteries", "lithium", "aa", "aaa", "rechargeable"],
+      "category": "special",
+      "instructions": "Never place in any curbside bin. Take to Berkeley's Hazardous Waste facility or a retailer drop-off.",
+      "notes": "Lithium batteries are a fire hazard in trucks."
+    },
+    {
+      "id": "electronics",
+      "title": "Electronics & E-Waste",
+      "keywords": ["electronics", "phone", "laptop", "computer", "e-waste", "charger", "cable"],
+      "category": "special",
+      "instructions": "Take to Berkeley's Transfer Station or an approved e-waste collection event.",
+      "notes": "California e-waste recycling law applies."
+    }
+  ]
+}

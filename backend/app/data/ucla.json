@@ -1,0 +1,72 @@
+{
+  "id": "ucla",
+  "name": "Los Angeles / UCLA, CA",
+  "jurisdiction": "City of Los Angeles / LA County",
+  "coordinates": { "lat": 34.0689, "lng": -118.4452 },
+  "documents": [
+    {
+      "id": "plastic-bottle-pet",
+      "title": "Plastic Bottles (#1 PET)",
+      "keywords": ["plastic bottle", "water bottle", "soda bottle", "pet", "#1", "bottle"],
+      "category": "recyclable",
+      "instructions": "Empty, rinse, and place in the blue recycling bin. Keep cap on.",
+      "notes": "LA accepts plastics #1 and #2 in curbside recycling."
+    },
+    {
+      "id": "aluminum-can",
+      "title": "Aluminum Cans",
+      "keywords": ["aluminum", "can", "soda can", "beer can", "metal can"],
+      "category": "recyclable",
+      "instructions": "Empty and rinse. Place in blue recycling bin.",
+      "notes": "California CRV applies — redeem at a recycling center for cash."
+    },
+    {
+      "id": "cardboard",
+      "title": "Cardboard & Paperboard",
+      "keywords": ["cardboard", "box", "paperboard", "cereal box", "shipping box"],
+      "category": "recyclable",
+      "instructions": "Flatten boxes. Remove tape. Place in blue recycling bin.",
+      "notes": "Greasy pizza boxes go in the black landfill bin."
+    },
+    {
+      "id": "glass-bottle",
+      "title": "Glass Bottles & Jars",
+      "keywords": ["glass", "jar", "wine bottle", "beer bottle"],
+      "category": "recyclable",
+      "instructions": "Empty and rinse. Place in blue recycling bin.",
+      "notes": null
+    },
+    {
+      "id": "food-scraps",
+      "title": "Food Scraps & Compostables",
+      "keywords": ["food", "scraps", "compost", "banana peel", "organic"],
+      "category": "compost",
+      "instructions": "Place in the green organics bin if available, otherwise landfill cart.",
+      "notes": "LA is rolling out mandatory organics collection — check your address."
+    },
+    {
+      "id": "styrofoam",
+      "title": "Styrofoam / Expanded Polystyrene",
+      "keywords": ["styrofoam", "foam", "polystyrene", "packing peanuts"],
+      "category": "landfill",
+      "instructions": "Not accepted in curbside recycling. Place in black landfill bin.",
+      "notes": "SB 54 may change foam rules — check current LA Sanitation guidelines."
+    },
+    {
+      "id": "plastic-bag",
+      "title": "Plastic Bags & Film",
+      "keywords": ["plastic bag", "grocery bag", "film", "wrap"],
+      "category": "special",
+      "instructions": "Do NOT place in curbside bins. Take to a store drop-off.",
+      "notes": null
+    },
+    {
+      "id": "battery",
+      "title": "Batteries",
+      "keywords": ["battery", "batteries", "lithium", "aa", "aaa"],
+      "category": "special",
+      "instructions": "Take to LA County HHW collection site or a retailer drop-off.",
+      "notes": null
+    }
+  ]
+}

@@ -9,7 +9,7 @@ import { ThemedView } from '@/components/themed-view';
 import { BorderRadius, Colors, FlatBorder, Spacing, Typography } from '@/constants/theme';
 import { useItemFlow } from '@/contexts/item-context';
 import { useAuth } from '@/hooks/use-auth';
-import { identifyWithVision } from '@/services/vision';
+import { identifyItem } from '@/services/api';
 import { consumeRateLimit, formatResetIn, RateLimits } from '@/utils/rate-limit';
 import type { ItemCategory } from '@/types/item';
 
@@ -53,7 +53,7 @@ export default function IdentifyScreen() {
     setLoading(true);
     setError('');
     try {
-      const result = await identifyWithVision(photoBase64);
+      const result = await identifyItem({ image: photoBase64 });
       setIdentification(result);
     } catch (e: any) {
       setError(e.message ?? 'Identification failed');
@@ -81,7 +81,7 @@ export default function IdentifyScreen() {
               Identifying your item...
             </ThemedText>
             <ThemedText style={Typography.caption} themeColor="textSecondary">
-              Google Vision is analyzing the photo
+              Gemini is analyzing the photo
             </ThemedText>
           </View>
         )}

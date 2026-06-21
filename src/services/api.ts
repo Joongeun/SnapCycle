@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import type { IdentifyRequest, IdentifyResponse, ServicesRequest, ServicesResponse, ScheduleRequest, ScheduleResponse } from '@/types/api';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const { data } = await supabase.auth.getSession();

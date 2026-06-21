@@ -1,5 +1,6 @@
-node_modules/
-dist/
+.venv/
+__pycache__/
+*.pyc
 .env
-.env.local
-*.log
+*.egg-info/
+.pytest_cache/
