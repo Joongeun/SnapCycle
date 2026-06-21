@@ -28,6 +28,13 @@ class Settings(BaseSettings):
     cache_ttl_ip: int = 604800  # 7 days
     cache_ttl_municipal_rules: int = 86400  # 24 hours
     cache_ttl_disposal_options: int = 43200  # 12 hours
+    cache_ttl_triage: int = 86400  # 24 hours
+    cache_ttl_card_detail: int = 43200  # 12 hours
+    cache_ttl_location_rag: int = 0  # 0 ⇒ no expiry (persistent RAG)
+
+    # Agent S (Simular) form-filling over a Browserbase cloud session
+    agent_s_max_steps: int = 25
+    agent_s_enabled: bool = True
 
     # Vector search
     embedding_model: str = "gemini-embedding-001"
@@ -65,6 +72,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = (_ENV_DIR / ".env", _ENV_DIR.parent / ".env")
+        extra = "ignore"
 
 
 settings = Settings()

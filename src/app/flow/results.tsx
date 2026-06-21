@@ -27,10 +27,12 @@ export default function ResultsScreen() {
   const {
     identification,
     location,
+    zip,
     options,
     priorityStat,
     setOptions,
     setSelectedCard,
+    setCardDetail,
     setPriorityStat,
     reset,
   } = useDisposalFlow();
@@ -54,6 +56,7 @@ export default function ResultsScreen() {
       itemName: identification.itemName,
       category: identification.category,
       location,
+      zip,
     })
       .then(({ cards }) => {
         setOptions(cards);
@@ -69,12 +72,17 @@ export default function ResultsScreen() {
 
   function pick(card: DisposalCard) {
     setSelectedCard(card);
+    setCardDetail(null, null); // clear any detail cached from a previously-picked card
     router.push('/flow/action' as any);
   }
 
   function startOver() {
     reset();
     router.replace('/(tabs)' as any);
+  }
+
+  function askQuestion() {
+    router.push('/flow/chat' as any);
   }
 
   return (
@@ -120,7 +128,12 @@ export default function ResultsScreen() {
         </ScrollView>
       )}
 
-      <View style={styles.footer}>
+      <View style={styles.footerRow}>
+        {status === 'populated' ? (
+          <Button title="Ask a question" variant="ghost" onPress={askQuestion} />
+        ) : (
+          <View />
+        )}
         <Button title="Start over" variant="ghost" onPress={startOver} />
       </View>
     </ThemedView>
@@ -157,5 +170,11 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingTop: Spacing.three,
+  },
+  footerRow: {
+    paddingTop: Spacing.three,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
 });

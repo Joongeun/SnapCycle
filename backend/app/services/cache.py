@@ -80,6 +80,12 @@ def geo_meta_key(location_id: str) -> str:
     return f"geo_meta:{location_id}"
 
 
+def location_rag_key(zip_code: str) -> str:
+    """Persistent (no-TTL) RAG knowledge built once at onboarding, keyed by zip."""
+    slug = re.sub(r"[^a-z0-9]+", "_", (zip_code or "unknown").lower()).strip("_")
+    return f"location_rag:{slug}"
+
+
 def slugify_geo(city: Optional[str], region: Optional[str]) -> str:
     raw = f"{city or 'unknown'}_{region or 'unknown'}"
     slug = re.sub(r"[^a-z0-9]+", "_", raw.lower()).strip("_")

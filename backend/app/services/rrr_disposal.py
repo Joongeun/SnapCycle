@@ -22,6 +22,7 @@ from app.schemas.rrr import DisposalCard, DisposalCardStats, DisposalOptionsRequ
 from app.services.browserbase import fetch_page, search_web
 from app.services.cache import get_json, set_json
 from app.services.gemini import generate_json
+from app.services.rrr_location_research import format_rag_context, retrieve_location_rag
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +94,8 @@ async def discover_disposal_options(req: DisposalOptionsRequest) -> List[Disposa
                 exc, where="browserbase.fetch_page", url=url, stage="disposal_options"
             )
 
-    prompt = _build_prompt(req, pages)
+    rag = await retrieve_location_rag(req.zip, f"{req.itemName} {req.category}")
+    prompt = _build_prompt(req, pages, format_rag_context(rag))
     raw = await generate_json(DISPOSAL_SYSTEM, prompt, max_output_tokens=4096)
     cards = _parse_cards(raw)
 
@@ -107,17 +109,19 @@ async def discover_disposal_options(req: DisposalOptionsRequest) -> List[Disposa
     return cards
 
 
-def _build_prompt(req: DisposalOptionsRequest, pages: List[dict]) -> str:
+def _build_prompt(req: DisposalOptionsRequest, pages: List[dict], rag_context: str = "") -> str:
     refs = []
     for i, page in enumerate(pages, 1):
         refs.append(f"{i}. {page['title']}\n   URL: {page['url']}\n   Content:\n{page['content'][:4000]}")
     refs_block = "\n\n".join(refs) if refs else "No page content fetched — use general knowledge for the location."
 
+    rag_block = f"\nLocal knowledge base (researched at onboarding — prefer this):\n{rag_context}\n" if rag_context and "No local knowledge base" not in rag_context else ""
+
     return f"""Find 3-6 real disposal pathways for this user and rank them best-first.
 
 Item: {req.itemName} ({req.category})
 Location: {req.location}
-
+{rag_block}
 Web reference material:
 {refs_block}
 

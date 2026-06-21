@@ -19,8 +19,9 @@ export default function LocationScreen() {
 
   function continueToResults() {
     const composed = [address.trim(), zip.trim()].filter(Boolean).join(', ');
-    setLocation(composed || zip.trim());
-    router.push('/flow/results' as any);
+    setLocation(composed || zip.trim(), zip.trim());
+    // Run the in-home triage first; it routes to home-disposal or the cards page.
+    router.replace('/flow/triage' as any);
   }
 
   return (

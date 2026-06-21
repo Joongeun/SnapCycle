@@ -12,8 +12,16 @@ create table if not exists public.profiles (
   donate_count int not null default 0,
   sell_count int not null default 0,
   discard_count int not null default 0,
-  default_location text
+  default_location text,
+  address text,
+  zip text,
+  onboarding_complete boolean not null default false
 );
+
+-- Backfill for existing deployments (no-op on a fresh DB).
+alter table public.profiles add column if not exists address text;
+alter table public.profiles add column if not exists zip text;
+alter table public.profiles add column if not exists onboarding_complete boolean not null default false;
 
 alter table public.profiles enable row level security;
 

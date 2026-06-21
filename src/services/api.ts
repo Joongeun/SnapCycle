@@ -1,5 +1,22 @@
 import { supabase } from './supabase';
-import type { IdentifyRequest, IdentifyResponse, ServicesRequest, ServicesResponse, ScheduleRequest, ScheduleResponse } from '@/types/api';
+import type {
+  AgentFormRequest,
+  AgentFormSession,
+  CardDetailRequest,
+  CardDetailResponse,
+  ChatRequest,
+  ChatResponse,
+  IdentifyRequest,
+  IdentifyResponse,
+  ResearchRequest,
+  ResearchResponse,
+  ScheduleRequest,
+  ScheduleResponse,
+  ServicesRequest,
+  ServicesResponse,
+  TriageRequest,
+  TriageResponse,
+} from '@/types/api';
 import type { ItemCategory } from '@/types/item';
 import type { DisposalCard, Hauler } from '@/types/disposal';
 
@@ -49,8 +66,53 @@ async function apiPost<T>(path: string, body: unknown): Promise<T> {
   return response.json();
 }
 
+async function apiGet<T>(path: string): Promise<T> {
+  const headers = await getAuthHeaders();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, { headers, signal: controller.signal });
+  } catch {
+    throw new Error(`Can't reach the server at ${API_URL}.`);
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Request failed' }));
+    throw new Error(error.message ?? `HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
 export async function identifyItem(request: IdentifyRequest): Promise<IdentifyResponse> {
   return apiPost('/api/identify', request);
+}
+
+export async function triageItem(request: TriageRequest): Promise<TriageResponse> {
+  return apiPost('/api/triage', request);
+}
+
+export async function getCardDetail(request: CardDetailRequest): Promise<CardDetailResponse> {
+  return apiPost('/api/card-detail', request);
+}
+
+export async function researchLocation(request: ResearchRequest): Promise<ResearchResponse> {
+  return apiPost('/api/research', request);
+}
+
+export async function chat(request: ChatRequest): Promise<ChatResponse> {
+  return apiPost('/api/chat', request);
+}
+
+export async function startAgentForm(request: AgentFormRequest): Promise<AgentFormSession> {
+  return apiPost('/api/agent/form', request);
+}
+
+export async function getAgentFormStatus(sessionId: string): Promise<AgentFormSession> {
+  return apiGet(`/api/agent/form/${sessionId}`);
 }
 
 export async function discoverServices(request: ServicesRequest): Promise<ServicesResponse> {
@@ -65,6 +127,7 @@ export interface DisposalOptionsRequest {
   itemName: string;
   category: ItemCategory;
   location: string;
+  zip?: string;
 }
 
 export async function getDisposalOptions(

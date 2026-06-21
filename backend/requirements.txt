@@ -7,6 +7,13 @@ browserbase>=1.0.0
 python-dotenv>=1.0.0
 redis>=5.0.0
 python-multipart>=0.0.9
+# Agent S form-filling over a Browserbase cloud session.
+# playwright drives the remote browser over CDP; run `playwright install chromium`.
+playwright>=1.47.0
+# Simular Agent S engine (optional desktop driver). Install to enable the
+# gui-agents code path; the Gemini+Playwright loop works without it.
+gui-agents>=0.1.0 ; python_version >= "3.10"
+
 # Sentry — captures silent failures hidden behind graceful-degradation fallbacks
 sentry-sdk[fastapi]>=2.0.0
 

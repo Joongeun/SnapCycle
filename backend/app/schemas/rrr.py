@@ -93,10 +93,116 @@ class DisposalOptionsRequest(BaseModel):
     itemName: str
     category: ItemCategory
     location: str
+    zip: str = ""
 
 
 class DisposalOptionsResponse(BaseModel):
     cards: List[DisposalCard]
+
+
+# --- In-home triage (refined agent — runs FIRST) ---------------------------
+
+DisposalBin = Literal["trash", "recycling"]
+
+
+class TriageRequest(BaseModel):
+    itemName: str
+    category: ItemCategory
+    location: str = ""
+    zip: str = ""
+
+
+class TriageResponse(BaseModel):
+    disposableAtHome: bool
+    bin: Optional[DisposalBin] = None
+    message: str = ""
+
+
+# --- Card detail (Agent 1 research) + recommendation (Agent 2 decide) -------
+
+RecommendationMode = Literal["summary", "form", "phone"]
+
+
+class CardDetail(BaseModel):
+    nextSteps: List[str] = []
+    constraints: List[str] = []
+    summary: str = ""
+    sourceUrl: Optional[str] = None
+    formUrl: Optional[str] = None
+    phone: Optional[str] = None
+
+
+class Recommendation(BaseModel):
+    mode: RecommendationMode
+    summary: str = ""
+    recommendation: str = ""
+    sourceUrl: Optional[str] = None
+    formUrl: Optional[str] = None
+    phone: Optional[str] = None
+
+
+class CardDetailRequest(BaseModel):
+    card: DisposalCard
+    itemName: str
+    location: str = ""
+    zip: str = ""
+
+
+class CardDetailResponse(BaseModel):
+    detail: CardDetail
+    recommendation: Recommendation
+
+
+# --- Onboarding location research (persistent RAG) -------------------------
+
+class ResearchRequest(BaseModel):
+    zip: str
+    address: str = ""
+
+
+class ResearchResponse(BaseModel):
+    status: Literal["ready", "cached"]
+    locationId: str
+    summary: str = ""
+
+
+# --- Chat agent ------------------------------------------------------------
+
+class ChatRequest(BaseModel):
+    question: str
+    location: str = ""
+    zip: str = ""
+    itemName: Optional[str] = None
+    cards: List[DisposalCard] = []
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    sources: List[str] = []
+
+
+# --- Agent S form-filling over Browserbase ---------------------------------
+
+class AgentFormProfile(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    zip: Optional[str] = None
+
+
+class AgentFormRequest(BaseModel):
+    formUrl: str
+    profile: AgentFormProfile = AgentFormProfile()
+    itemName: str = ""
+    itemDescription: str = ""
+
+
+class AgentFormSession(BaseModel):
+    sessionId: str
+    liveViewUrl: str
+    status: Literal["filling", "ready", "error"] = "filling"
+    detail: str = ""
 
 
 # --- Yelp haulers ----------------------------------------------------------

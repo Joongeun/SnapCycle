@@ -38,6 +38,12 @@
         }
       ],
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "RRR2 uses your location to find local disposal pathways and build your area's recycling rules."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#F3E7D3",

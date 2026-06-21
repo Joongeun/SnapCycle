@@ -57,3 +57,22 @@ def create_session():
     if settings.browserbase_project_id:
         kwargs["project_id"] = settings.browserbase_project_id
     return client.sessions.create(**kwargs)
+
+
+def session_connect_url(session) -> Optional[str]:
+    """CDP endpoint Playwright connects to (connect_over_cdp)."""
+    return getattr(session, "connect_url", None) or getattr(session, "connectUrl", None)
+
+
+def session_live_view_url(session_id: str) -> Optional[str]:
+    """Embeddable fullscreen live-view URL for the running session."""
+    client = get_client()
+    try:
+        debug = client.sessions.debug(session_id)
+    except Exception:  # noqa: BLE001
+        return None
+    return (
+        getattr(debug, "debugger_fullscreen_url", None)
+        or getattr(debug, "debuggerFullscreenUrl", None)
+        or getattr(debug, "debugger_url", None)
+    )

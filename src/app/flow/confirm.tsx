@@ -69,7 +69,7 @@ export default function ConfirmScreen() {
         <Button
           title="Yes, that's right"
           size="lg"
-          onPress={() => router.push('/flow/location' as any)}
+          onPress={() => router.push('/flow/triage' as any)}
         />
         <Button
           title="No — retake photo"
