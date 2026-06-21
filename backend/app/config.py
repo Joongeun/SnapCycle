@@ -43,6 +43,20 @@ class Settings(BaseSettings):
     allowed_origins: str = ""
     auth_required: bool = False
 
+    # Sentry error monitoring — captures silent failures behind graceful fallbacks
+    sentry_dsn: str = ""
+    sentry_environment: str = "local"
+    sentry_traces_sample_rate: float = 1.0
+
+    # Arize Phoenix (OSS) observability
+    phoenix_enabled: bool = True
+    phoenix_collector_endpoint: str = ""
+    phoenix_api_key: str = ""
+    phoenix_project: str = "rrr-backend"
+
+    # Prompt A/B switch for the eval before/after loop: "baseline" | "v2"
+    prompt_variant: str = "baseline"
+
     @property
     def cors_origins(self) -> list[str]:
         if not self.allowed_origins.strip():

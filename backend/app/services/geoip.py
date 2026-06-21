@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Tuple
 import httpx
 
 from app.config import settings
+from app.observability import capture_silent_failure
 from app.services.cache import geo_meta_key, get_json, get_string, ip_cache_key, set_json, set_string, slugify_geo
 from app.services.location import get_location_data, list_locations
 
@@ -31,16 +32,32 @@ async def lookup_ip(ip: str) -> dict:
     if ip in ("127.0.0.1", "::1", "localhost"):
         return {"city": None, "region": None, "zip": None, "lat": None, "lon": None}
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
-            f"{settings.geoip_url}/{ip}",
-            params={"fields": "status,city,regionName,zip,lat,lon"},
-            timeout=5.0,
-        )
-        response.raise_for_status()
-        data = response.json()
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{settings.geoip_url}/{ip}",
+                params={"fields": "status,city,regionName,zip,lat,lon"},
+                timeout=5.0,
+            )
+            response.raise_for_status()
+            data = response.json()
+    except Exception as exc:  # noqa: BLE001
+        # Network/timeout/HTTP error talking to ip-api. Re-raise so the caller's
+        # behavior is unchanged, but record it — otherwise a flaky geoip provider
+        # is invisible behind the location-resolution flow.
+        capture_silent_failure(exc, where="geoip.lookup_ip", ip=ip, reason="request_error")
+        raise
 
     if data.get("status") != "success":
+        # ip-api answered but couldn't resolve the IP (rate-limited, reserved range).
+        # We silently fall back to "no location"; surface it so the degradation is seen.
+        capture_silent_failure(
+            RuntimeError(f"ip-api returned status={data.get('status')!r} for IP"),
+            where="geoip.lookup_ip",
+            ip=ip,
+            reason="unresolved",
+            api_status=data.get("status"),
+        )
         return {"city": None, "region": None, "zip": None, "lat": None, "lon": None}
 
     return {

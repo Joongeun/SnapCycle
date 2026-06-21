@@ -8,8 +8,27 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api import location, recycle, rrr
 from app.config import settings
+from app.observability import setup_tracing
 from app.services.cache import close_redis, init_redis
 from app.services.item_index import init_item_index
+
+# Initialize Sentry BEFORE the app + instrumented libraries are first used, so the
+# capture_exception() calls sprinkled through the silent-failure fallbacks have a
+# live client to report to. No-ops cleanly when SENTRY_DSN is unset.
+if settings.sentry_dsn:
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        environment=settings.sentry_environment,
+        traces_sample_rate=settings.sentry_traces_sample_rate,
+        # We capture exceptions explicitly inside graceful-degradation handlers;
+        # keep the default integrations so unhandled errors are still reported.
+        send_default_pii=False,
+    )
+
+# Register Phoenix tracing before the app + instrumented libraries are first used.
+setup_tracing()
 
 
 @asynccontextmanager

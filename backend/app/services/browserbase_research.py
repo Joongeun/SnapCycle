@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from app.agent.research_prompts import RESEARCH_SYSTEM, build_recycling_research_prompt
 from app.config import settings
+from app.observability import capture_silent_failure
 from app.services.browserbase import fetch_page, search_web
 from app.services.gemini import generate
 
@@ -48,6 +49,9 @@ async def research_recycling_rule(
                 })
         except Exception as exc:
             logger.warning("Fetch failed for %s: %s", url, exc)
+            capture_silent_failure(
+                exc, where="browserbase.fetch_page", url=url, stage="recycling_research"
+            )
 
     prompt = build_recycling_research_prompt(
         city=city,

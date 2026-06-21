@@ -8,6 +8,7 @@ import re
 from typing import List
 
 from app.config import settings
+from app.observability import capture_silent_failure
 from app.schemas.rrr import ServiceOption, ServicesRequest
 from app.services.browserbase import fetch_page, search_web
 from app.services.cache import get_json, set_json
@@ -83,6 +84,9 @@ async def discover_services(req: ServicesRequest) -> List[ServiceOption]:
                 )
         except Exception as exc:
             logger.warning("Fetch failed for %s: %s", url, exc)
+            capture_silent_failure(
+                exc, where="browserbase.fetch_page", url=url, stage="service_discovery"
+            )
 
     prompt = _build_prompt(req, pages)
     raw = await generate(DISCOVERY_SYSTEM, prompt, max_output_tokens=4096)
@@ -144,8 +148,13 @@ def _parse_services(raw: str) -> List[ServiceOption]:
 
     try:
         data = json.loads(text[start : end + 1])
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
         logger.warning("Could not parse services JSON from model output")
+        capture_silent_failure(
+            exc,
+            where="gemini.parse_services_json",
+            raw_snippet=text[:500],
+        )
         return []
 
     services: List[ServiceOption] = []

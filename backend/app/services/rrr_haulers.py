@@ -14,6 +14,7 @@ from typing import List
 import httpx
 
 from app.config import settings
+from app.observability import capture_silent_failure
 from app.schemas.rrr import Hauler, HaulersRequest
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,12 @@ METERS_PER_MILE = 1609.34
 async def find_haulers(req: HaulersRequest) -> List[Hauler]:
     if not settings.yelp_api_key:
         logger.warning("YELP_API_KEY not set — returning no haulers")
+        capture_silent_failure(
+            RuntimeError("YELP_API_KEY not set — hauler list silently returned empty"),
+            where="yelp.find_haulers",
+            reason="missing_api_key",
+            location=req.location,
+        )
         return []
 
     params = {
@@ -41,10 +48,20 @@ async def find_haulers(req: HaulersRequest) -> List[Hauler]:
             resp = await client.get(YELP_SEARCH_URL, params=params, headers=headers)
         if resp.status_code != 200:
             logger.warning("Yelp search failed: HTTP %s", resp.status_code)
+            capture_silent_failure(
+                RuntimeError(f"Yelp Fusion search returned HTTP {resp.status_code}"),
+                where="yelp.find_haulers",
+                reason="bad_status",
+                status_code=resp.status_code,
+                location=req.location,
+            )
             return []
         data = resp.json()
     except Exception as exc:  # noqa: BLE001
         logger.warning("Yelp request error: %s", exc)
+        capture_silent_failure(
+            exc, where="yelp.find_haulers", reason="request_error", location=req.location
+        )
         return []
 
     haulers: List[Hauler] = []

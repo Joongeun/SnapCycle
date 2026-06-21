@@ -7,6 +7,7 @@ from typing import List, Optional
 from redis.exceptions import ResponseError
 
 from app.config import settings
+from app.observability import capture_silent_failure
 from app.services.cache import get_redis_binary, item_doc_key, normalize_query, pack_embedding
 from app.services.embeddings import embed_text
 
@@ -55,8 +56,10 @@ async def init_item_index() -> None:
             logger.info("Redis item vector index already exists")
         else:
             logger.warning("Could not create vector index (Redis Stack required): %s", exc)
+            capture_silent_failure(exc, where="redis.vector_index.create", reason="response_error")
     except Exception as exc:
         logger.warning("Vector index init skipped: %s", exc)
+        capture_silent_failure(exc, where="redis.vector_index.create", reason="init_skipped")
 
 
 async def search_item(query: str) -> Optional[ItemMatch]:
@@ -108,6 +111,7 @@ async def search_item(query: str) -> Optional[ItemMatch]:
         return ItemMatch(query=matched_query, item_id=item_id, distance=distance)
     except Exception as exc:
         logger.warning("Item vector search failed: %s", exc)
+        capture_silent_failure(exc, where="redis.vector_search", query=query)
         return None
 
 
@@ -132,3 +136,4 @@ async def index_item_query(query: str, item_id: str) -> None:
         logger.info("Indexed item query: %r → %s", query, item_id)
     except Exception as exc:
         logger.warning("Failed to index item query: %s", exc)
+        capture_silent_failure(exc, where="redis.vector_index.write", query=query, item_id=item_id)

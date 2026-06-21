@@ -9,6 +9,7 @@ from typing import Tuple
 from google.genai import types
 
 from app.config import settings
+from app.observability import capture_silent_failure
 from app.schemas.rrr import IdentifyResponse, ItemCategory
 from app.services.gemini import _get_client
 
@@ -88,8 +89,12 @@ def _parse_identify_response(raw: str) -> IdentifyResponse:
                 condition="good",
                 description=str(data.get("description") or "").strip(),
             )
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError as exc:
+            capture_silent_failure(
+                exc,
+                where="gemini.parse_identify_json",
+                raw_snippet=text[:500],
+            )
 
     # If parsing failed but the text still looks like JSON, never surface the
     # raw blob to the UI — fall back to a generic name instead.

@@ -8,6 +8,7 @@ from typing import Optional, Tuple
 from google.genai import types
 
 from app.config import settings
+from app.observability import llm_span, set_llm_output
 from app.services.gemini import _get_client
 
 VISION_SYSTEM = """You identify objects in photos for waste sorting and recycling.
@@ -34,18 +35,26 @@ async def identify_item_from_bytes(
     client = _get_client()
 
     def _call() -> str:
-        response = client.models.generate_content(
+        with llm_span(
+            "gemini.vision.identify",
             model=settings.gemini_model,
-            contents=[
-                types.Part.from_bytes(data=image_bytes, mime_type=media_type),
-                "What is this item? Give a short recycling search label.",
-            ],
-            config=types.GenerateContentConfig(
-                system_instruction=VISION_SYSTEM,
-                max_output_tokens=64,
-            ),
-        )
-        return _clean_label(response.text or "")
+            system=VISION_SYSTEM,
+            user=f"[image {media_type}, {len(image_bytes)} bytes] What is this item?",
+        ) as span:
+            response = client.models.generate_content(
+                model=settings.gemini_model,
+                contents=[
+                    types.Part.from_bytes(data=image_bytes, mime_type=media_type),
+                    "What is this item? Give a short recycling search label.",
+                ],
+                config=types.GenerateContentConfig(
+                    system_instruction=VISION_SYSTEM,
+                    max_output_tokens=64,
+                ),
+            )
+            label = _clean_label(response.text or "")
+            set_llm_output(span, label, getattr(response, "usage_metadata", None))
+            return label
 
     return await asyncio.to_thread(_call)
 

@@ -7,3 +7,25 @@ browserbase>=1.0.0
 python-dotenv>=1.0.0
 redis>=5.0.0
 python-multipart>=0.0.9
+# Sentry — captures silent failures hidden behind graceful-degradation fallbacks
+sentry-sdk[fastapi]>=2.0.0
+
+# --- Arize Phoenix (OSS) tracing + evals ---
+arize-phoenix-otel>=0.6.0
+# NOTE on auto-instrumentation under Python 3.14 + google-genai 2.9.0:
+#   - openinference-instrumentation-google-genai 1.1.0 (only 3.14-compatible build) expects
+#     google.genai._interactions, which doesn't exist in google-genai 2.9.0 → cannot attach.
+#     Gemini calls are instead captured by MANUAL OpenInference LLM spans (app/observability.py
+#     ::llm_span, applied in gemini.py + vision.py).
+#   - httpx + redis auto-instrumentation require Python <3.14.
+#   On Python <=3.13 you can uncomment these for richer auto child spans:
+# openinference-instrumentation-google-genai>=0.1.0
+# openinference-instrumentation-httpx>=0.1.0
+# openinference-instrumentation-redis>=0.1.0
+# Evals + client (llm_classify, GeminiModel, px.Client, SpanEvaluations)
+arize-phoenix-evals>=0.17.0
+arize-phoenix-client>=1.0.0
+arize-phoenix>=7.0.0
+# Judge LLM backend for phoenix.evals GeminiModel
+google-generativeai>=0.8.0
+pandas>=2.0.0

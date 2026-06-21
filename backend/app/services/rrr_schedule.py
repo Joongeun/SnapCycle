@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 
+from app.observability import capture_silent_failure
 from app.schemas.rrr import ScheduleRequest, ScheduleResponse
 from app.services.gemini import generate
 
@@ -44,5 +45,8 @@ def _parse_json(raw: str) -> dict:
         return {}
     try:
         return json.loads(text[start : end + 1])
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
+        capture_silent_failure(
+            exc, where="gemini.parse_schedule_json", raw_snippet=text[:500]
+        )
         return {}

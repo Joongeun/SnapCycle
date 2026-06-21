@@ -8,6 +8,7 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.config import settings
+from app.observability import capture_silent_failure
 
 logger = logging.getLogger(__name__)
 
@@ -54,4 +55,5 @@ async def _verify_supabase_token(token: str) -> Optional[str]:
         return response.json().get("id")
     except Exception as exc:
         logger.warning("Supabase auth check failed: %s", exc)
+        capture_silent_failure(exc, where="supabase.verify_token", reason="request_error")
         return None

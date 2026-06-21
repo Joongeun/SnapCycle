@@ -1,0 +1,162 @@
+[
+  {
+    "issue_title": "RuntimeError: YELP_API_KEY not set \u2014 hauler list silently returned empty",
+    "type": "RuntimeError",
+    "value": "YELP_API_KEY not set \u2014 hauler list silently returned empty",
+    "tags": {
+      "silent_failure": "true",
+      "failure.where": "yelp.find_haulers"
+    },
+    "context": {
+      "where": "yelp.find_haulers",
+      "reason": "missing_api_key",
+      "location": "Berkeley, CA"
+    },
+    "level": "error"
+  },
+  {
+    "issue_title": "JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 18 (char 17)",
+    "type": "JSONDecodeError",
+    "value": "Expecting property name enclosed in double quotes: line 1 column 18 (char 17)",
+    "tags": {
+      "silent_failure": "true",
+      "failure.where": "gemini.parse_services_json"
+    },
+    "context": {
+      "where": "gemini.parse_services_json",
+      "raw_snippet": "{ \"services\": [ {name: broken json } ] }"
+    },
+    "level": "error"
+  },
+  {
+    "issue_title": "JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 15 (char 14)",
+    "type": "JSONDecodeError",
+    "value": "Expecting property name enclosed in double quotes: line 1 column 15 (char 14)",
+    "tags": {
+      "silent_failure": "true",
+      "failure.where": "gemini.parse_disposal_cards_json"
+    },
+    "context": {
+      "where": "gemini.parse_disposal_cards_json",
+      "raw_snippet": "{ \"cards\": [ {method: donation, } }"
+    },
+    "level": "error"
+  },
+  {
+    "issue_title": "JSONDecodeError: Expecting ',' delimiter: line 1 column 22 (char 21)",
+    "type": "JSONDecodeError",
+    "value": "Expecting ',' delimiter: line 1 column 22 (char 21)",
+    "tags": {
+      "silent_failure": "true",
+      "failure.where": "gemini.parse_identify_json"
+    },
+    "context": {
+      "where": "gemini.parse_identify_json",
+      "raw_snippet": "{ \"itemName\": \"sofa\" \"category\": }"
+    },
+    "level": "error"
+  },
+  {
+    "issue_title": "JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)",
+    "type": "JSONDecodeError",
+    "value": "Expecting property name enclosed in double quotes: line 1 column 3 (char 2)",
+    "tags": {
+      "silent_failure": "true",
+      "failure.where": "gemini.parse_schedule_json"
+    },
+    "context": {
+      "where": "gemini.parse_schedule_json",
+      "raw_snippet": "{ confirmation: not-valid }"
+    },
+    "level": "error"
+  },
+  {
+    "issue_title": "ConnectionError: Error 22 connecting to localhost:6399. The remote computer refused the network connection.",
+    "type": "ConnectionError",
+    "value": "Error 22 connecting to localhost:6399. The remote computer refused the network connection.",
+    "tags": {
+      "silent_failure": "true",
+      "failure.where": "redis.get_json"
+    },
+    "context": {
+      "where": "redis.get_json",
+      "key": "rule:berkeley:battery"
+    },
+    "level": "error"
+  },
+  {
+    "issue_title": "ConnectionError: Error 22 connecting to localhost:6399. The remote computer refused the network connection.",
+    "type": "ConnectionError",
+    "value": "Error 22 connecting to localhost:6399. The remote computer refused the network connection.",
+    "tags": {
+      "silent_failure": "true",
+      "failure.where": "redis.set_json"
+    },
+    "context": {
+      "where": "redis.set_json",
+      "key": "rule:berkeley:battery"
+    },
+    "level": "error"
+  },
+  {
+    "issue_title": "ConnectionError: Error 22 connecting to localhost:6399. The remote computer refused the network connection.",
+    "type": "ConnectionError",
+    "value": "Error 22 connecting to localhost:6399. The remote computer refused the network connection.",
+    "tags": {
+      "silent_failure": "true",
+      "failure.where": "redis.init"
+    },
+    "context": {
+      "where": "redis.init",
+      "reason": "connect_failed",
+      "redis_url": "redis://localhost:6399/0"
+    },
+    "level": "error"
+  },
+  {
+    "issue_title": "ConnectionError: Browserbase fetch failed for https://unreachable.invalid/x",
+    "type": "ConnectionError",
+    "value": "Browserbase fetch failed for https://unreachable.invalid/x",
+    "tags": {
+      "silent_failure": "true",
+      "failure.where": "browserbase.fetch_page"
+    },
+    "context": {
+      "where": "browserbase.fetch_page",
+      "url": "https://unreachable.invalid/x",
+      "stage": "recycling_research"
+    },
+    "level": "error"
+  },
+  {
+    "issue_title": "RuntimeError: ip-api returned status='fail' for IP",
+    "type": "RuntimeError",
+    "value": "ip-api returned status='fail' for IP",
+    "tags": {
+      "silent_failure": "true",
+      "failure.where": "geoip.lookup_ip"
+    },
+    "context": {
+      "where": "geoip.lookup_ip",
+      "ip": "0.0.0.0",
+      "reason": "unresolved",
+      "api_status": "fail"
+    },
+    "level": "error"
+  },
+  {
+    "issue_title": "ConnectError: All connection attempts failed",
+    "type": "ConnectError",
+    "value": "All connection attempts failed",
+    "tags": {
+      "silent_failure": "true",
+      "failure.where": "geoip.lookup_ip"
+    },
+    "context": {
+      "where": "geoip.lookup_ip",
+      "ip": "8.8.8.8",
+      "reason": "request_error"
+    },
+    "level": "error"
+  }
+]

@@ -10,6 +10,7 @@ from typing import Any, List, Optional, Tuple
 import redis.asyncio as aioredis
 
 from app.config import settings
+from app.observability import capture_silent_failure
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,9 @@ async def init_redis() -> None:
         logger.info("Redis connected")
     except Exception as exc:
         logger.warning("Redis unavailable, caching disabled: %s", exc)
+        capture_silent_failure(
+            exc, where="redis.init", reason="connect_failed", redis_url=settings.redis_url
+        )
         _redis = None
         _redis_binary = None
 
@@ -108,6 +112,7 @@ async def get_string(key: str) -> Optional[str]:
         return await _redis.get(key)
     except Exception as exc:
         logger.warning("Redis get failed for %s: %s", key, exc)
+        capture_silent_failure(exc, where="redis.get_string", key=key)
         return None
 
 
@@ -121,6 +126,7 @@ async def set_string(key: str, value: str, ttl: Optional[int] = None) -> None:
             await _redis.set(key, value)
     except Exception as exc:
         logger.warning("Redis set failed for %s: %s", key, exc)
+        capture_silent_failure(exc, where="redis.set_string", key=key)
 
 
 async def get_json(key: str) -> Optional[Any]:
@@ -133,6 +139,7 @@ async def get_json(key: str) -> Optional[Any]:
         return json.loads(raw)
     except Exception as exc:
         logger.warning("Redis get failed for %s: %s", key, exc)
+        capture_silent_failure(exc, where="redis.get_json", key=key)
         return None
 
 
@@ -147,6 +154,7 @@ async def set_json(key: str, value: Any, ttl: Optional[int] = None) -> None:
             await _redis.set(key, payload)
     except Exception as exc:
         logger.warning("Redis set failed for %s: %s", key, exc)
+        capture_silent_failure(exc, where="redis.set_json", key=key)
 
 
 async def delete(key: str) -> None:
@@ -156,3 +164,4 @@ async def delete(key: str) -> None:
         await _redis.delete(key)
     except Exception as exc:
         logger.warning("Redis delete failed for %s: %s", key, exc)
+        capture_silent_failure(exc, where="redis.delete", key=key)

@@ -4,6 +4,7 @@ import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.agent.prompts import AGENT_SYSTEM
+from app.observability import capture_silent_failure
 from app.services.browserbase_research import research_recycling_rule
 from app.services.gemini import generate
 from app.services.location import get_location_data
@@ -55,7 +56,15 @@ async def fetch_and_cache_rule(
                     item=original_query,
                     item_id=item_id,
                 )
-            except Exception:
+            except Exception as exc:
+                capture_silent_failure(
+                    exc,
+                    where="browserbase.research_recycling_rule",
+                    item_id=item_id,
+                    city=resolved_city,
+                    region=resolved_region,
+                    fallback="llm" if location else "raise",
+                )
                 if location:
                     rule = await _rule_from_llm(location, item_id, original_query)
                 else:

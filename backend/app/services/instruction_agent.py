@@ -3,7 +3,8 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.agent.prompts import AGENT_SYSTEM, build_agent_instruction_prompt
+from app.agent.prompts import agent_system, build_agent_instruction_prompt
+from app.observability import capture_silent_failure
 from app.services.browserbase_research import research_recycling_rule
 from app.services.gemini import generate
 from app.services.location import get_location_data
@@ -61,8 +62,14 @@ async def gather_references(
                 references.append(research)
                 # Cache research for future reference lookups (not as final answer)
                 await set_json(rule_key(location_id, item_id), research, ttl=None)
-            except Exception:
-                pass
+            except Exception as exc:
+                capture_silent_failure(
+                    exc,
+                    where="browserbase.research_recycling_rule",
+                    item_id=item_id,
+                    city=resolved_city,
+                    region=resolved_region,
+                )
 
     return references, redis_hit, browserbase_used
 
@@ -86,7 +93,7 @@ async def synthesize_instructions(
         from_image=from_image,
     )
 
-    raw = await generate(AGENT_SYSTEM, prompt, max_output_tokens=2048)
+    raw = await generate(agent_system(), prompt, max_output_tokens=2048)
     return _parse_agent_response(raw, item_id=item_id, references=references)
 
 
