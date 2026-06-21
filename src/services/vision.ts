@@ -72,15 +72,23 @@ export async function identifyWithVision(base64: string): Promise<ItemIdentifica
     throw new Error(result.error.message);
   }
 
-  const objects = (result?.localizedObjectAnnotations ?? []).map((o) => o.name);
-  const labels = (result?.labelAnnotations ?? []).map((l) => l.description);
+  const NOISE = ['cable', 'wire', 'cord', 'plug', 'electrical wiring', 'power cord'];
+
+  const rawObjects = result?.localizedObjectAnnotations ?? [];
+  const filteredObjects = rawObjects
+    .sort((a, b) => b.score - a.score)
+    .filter((o) => !NOISE.some((n) => o.name.toLowerCase().includes(n)));
+
+  const objects = filteredObjects.map((o) => o.name);
+  const labels = (result?.labelAnnotations ?? [])
+    .filter((l) => !NOISE.some((n) => l.description.toLowerCase().includes(n)))
+    .map((l) => l.description);
   const allTerms = [...objects, ...labels];
 
   if (allTerms.length === 0) {
     throw new Error('Could not identify the item. Try another photo.');
   }
 
-  // Prefer a localized object name (more specific) for the item name.
   const itemName = objects[0] ?? labels[0];
   const category = categorize(allTerms);
 

@@ -36,8 +36,14 @@ export function ItemProvider({ children }: { children: ReactNode }) {
 
   const value: ItemContextValue = {
     ...state,
+    // A new photo invalidates everything downstream — clear stale results so
+    // identification re-runs instead of reusing the previous item.
     setPhoto: (photoUri, photoBase64) =>
-      setState((s) => ({ ...s, photoUri, photoBase64 })),
+      setState({
+        ...emptyState,
+        photoUri,
+        photoBase64,
+      }),
     setIdentification: (identification) => setState((s) => ({ ...s, identification })),
     setAnswers: (answers) => setState((s) => ({ ...s, answers })),
     setDecision: (decision) => setState((s) => ({ ...s, decision })),

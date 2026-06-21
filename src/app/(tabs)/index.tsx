@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 
 import { Card } from '@/components/ui/card';
 import { ItemCard } from '@/components/item/item-card';
@@ -50,7 +51,7 @@ export default function HomeScreen() {
               { backgroundColor: pressed ? theme.accent : theme.primary },
             ]}
           >
-            <ThemedText style={styles.cameraIcon}>+</ThemedText>
+            <Ionicons name="camera" size={44} color="#FBF3E4" />
           </Pressable>
           <ThemedText style={[Typography.h3, styles.cameraLabel]}>Scan an Item</ThemedText>
           <ThemedText style={Typography.caption} themeColor="textSecondary">
