@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { BorderRadius, Colors, FlatBorder, Spacing, Typography } from '@/constants/theme';
+import { haptics } from '@/utils/haptics';
 
 interface OptionButtonProps {
   label: string;
@@ -14,7 +15,10 @@ interface OptionButtonProps {
 export function OptionButton({ label, selected, onPress, sublabel }: OptionButtonProps) {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        haptics.select();
+        onPress();
+      }}
       style={[
         styles.base,
         { backgroundColor: selected ? Colors.light.primaryLight : Colors.light.backgroundElement },

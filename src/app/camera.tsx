@@ -11,6 +11,7 @@ import { Colors, FlatBorder, Spacing, Typography } from '@/constants/theme';
 import { useCamera } from '@/hooks/use-camera';
 import { useItemFlow } from '@/contexts/item-context';
 import { processPhoto } from '@/utils/image';
+import { haptics } from '@/utils/haptics';
 
 export default function CameraScreen() {
   const { granted, requestPermission } = useCamera();
@@ -44,6 +45,7 @@ export default function CameraScreen() {
 
   async function takePhoto() {
     if (!cameraRef.current) return;
+    haptics.medium();
     const shot = await cameraRef.current.takePictureAsync({ quality: 1 });
     if (shot?.uri) setPreviewUri(shot.uri);
   }

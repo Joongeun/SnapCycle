@@ -8,11 +8,13 @@ import Animated, {
 import { router } from 'expo-router';
 
 import { Button } from '@/components/ui/button';
+import { Confetti } from '@/components/effects/confetti';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BorderRadius, Colors, FlatBorder, Spacing, Typography } from '@/constants/theme';
 import { useItemFlow } from '@/contexts/item-context';
 import { computeDecision } from '@/utils/decision-logic';
+import { haptics } from '@/utils/haptics';
 import type { Decision } from '@/types/item';
 
 const DECISION_META: Record<
@@ -41,6 +43,7 @@ export default function ResultScreen() {
   const scale = useSharedValue(0.85);
   useEffect(() => {
     scale.value = withSpring(1, { damping: 12, stiffness: 180 });
+    haptics.success();
   }, []);
   const cardStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
@@ -59,6 +62,7 @@ export default function ResultScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <Confetti />
       <View style={styles.content}>
         <ThemedText style={[Typography.captionBold, styles.heading]} themeColor="textSecondary">
           OUR RECOMMENDATION

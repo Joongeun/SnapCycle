@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { scheduleService } from '@/services/api';
 import { uploadItemPhoto } from '@/services/storage';
 import { createItem } from '@/services/items';
+import { haptics } from '@/utils/haptics';
 
 const TIMING_OPTIONS = [
   { label: 'This week', value: 'this week' },
@@ -71,9 +72,11 @@ export default function ConfirmScreen() {
         selectedService: { ...selectedService, scheduledDate },
       });
 
+      haptics.success();
       flow.reset();
       router.replace('/' as any);
     } catch (e: any) {
+      haptics.error();
       setError(e.message ?? 'Could not save. Please try again.');
     } finally {
       setSaving(false);
