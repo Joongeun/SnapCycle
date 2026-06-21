@@ -1,5 +1,8 @@
 import { supabase } from './supabase';
+import { uploadItemPhoto } from './storage';
 import type { Decision, DecisionAnswers, Item, ItemCategory, ItemCondition, SelectedService } from '@/types/item';
+import type { IdentifyResponse } from '@/types/api';
+import type { DisposalCard, DisposalMethod } from '@/types/disposal';
 import type { UserProfile } from '@/types/user';
 
 interface NewItemInput {
@@ -68,6 +71,78 @@ export async function createItem(input: NewItemInput): Promise<Item> {
 
   if (error) throw error;
   return rowToItem(data as ItemRow);
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+  ]);
+}
+
+/** The disposal flow only has a method, not a DONATE/SELL/DISCARD decision — map it. */
+const METHOD_TO_DECISION: Record<DisposalMethod, Decision> = {
+  donation: 'DONATE',
+  city_bulky_pickup: 'DISCARD',
+  junk_haulers: 'DISCARD',
+  recycling_collective: 'DISCARD',
+  hhw: 'DISCARD',
+  ewaste: 'DISCARD',
+};
+
+/**
+ * Persists a completed disposal flow to history: uploads the photo to Storage,
+ * then inserts the item row. Returns the saved item.
+ */
+export async function saveDisposalToHistory(params: {
+  userId: string;
+  photoBase64: string | null;
+  identification: IdentifyResponse;
+  selectedCard: DisposalCard;
+  location: string;
+}): Promise<Item> {
+  const { userId, photoBase64, identification, selectedCard } = params;
+
+  let photoUrl: string | null = null;
+  if (photoBase64) {
+    try {
+      photoUrl = await withTimeout(uploadItemPhoto(userId, photoBase64), 12000);
+    } catch (e: any) {
+      const why = e?.message === 'timeout' ? 'timed out' : (e?.message ?? 'failed');
+      throw new Error(`Photo upload ${why}. Check the "item-photos" Storage bucket exists and is public.`);
+    }
+  }
+
+  const decision = METHOD_TO_DECISION[selectedCard.method] ?? 'DISCARD';
+
+  try {
+    return await withTimeout(
+      createItem({
+        userId,
+        photoUrl,
+        itemName: identification.itemName,
+        category: identification.category,
+        condition: identification.condition,
+        description: identification.description,
+        decision,
+        answers: {
+          wantToDonate: decision === 'DONATE',
+          askingPrice: null,
+          meaningfulness: 3,
+          urgency: 'no_rush',
+        },
+        selectedService: {
+          name: selectedCard.title,
+          url: selectedCard.formUrl ?? '',
+          phone: selectedCard.phone,
+        },
+      }),
+      12000,
+    );
+  } catch (e: any) {
+    const why = e?.message === 'timeout' ? 'timed out' : (e?.message ?? 'failed');
+    throw new Error(`Saving item ${why} (database insert).`);
+  }
 }
 
 export async function listItems(userId: string): Promise<Item[]> {

@@ -1,139 +1,80 @@
-import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 
+import { AgentMessage } from '@/components/disposal/agent-message';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { OptionButton } from '@/components/flow/option-button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Colors, Spacing, Typography } from '@/constants/theme';
-import { useItemFlow } from '@/contexts/item-context';
-import { useAuth } from '@/hooks/use-auth';
-import { scheduleService } from '@/services/api';
-import { uploadItemPhoto } from '@/services/storage';
-import { createItem } from '@/services/items';
-import { haptics } from '@/utils/haptics';
+import { BorderRadius, Colors, FlatBorder, Spacing, Typography } from '@/constants/theme';
+import { useDisposalFlow } from '@/contexts/disposal-context';
+import type { ItemCategory } from '@/types/item';
 
-const TIMING_OPTIONS = [
-  { label: 'This week', value: 'this week' },
-  { label: 'This month', value: 'this month' },
-  { label: "I'm flexible", value: 'whenever works' },
-];
+const CATEGORY_LABELS: Record<ItemCategory, string> = {
+  furniture: 'Furniture',
+  appliance: 'Appliance',
+  electronics: 'Electronics',
+  clothing: 'Clothing',
+  decor: 'Decor',
+  sports: 'Sports & Fitness',
+  other: 'Other',
+};
 
 export default function ConfirmScreen() {
-  const { user } = useAuth();
-  const flow = useItemFlow();
-  const { identification, answers, decision, selectedService, photoBase64 } = flow;
+  const { identification, photoUri } = useDisposalFlow();
 
-  const [timing, setTiming] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
-  async function handleConfirm() {
-    if (!user || !identification || !answers || !decision || !selectedService || !timing) return;
-
-    setError('');
-    setSaving(true);
-    try {
-      // Draft a friendly confirmation (best-effort — don't block on failure).
-      let scheduledDate = timing;
-      try {
-        const draft = await scheduleService({
-          serviceName: selectedService.name,
-          itemName: identification.itemName,
-          decision,
-          date: timing,
-        });
-        scheduledDate = draft.scheduledAction || timing;
-      } catch {
-        // non-fatal
-      }
-
-      // Upload the photo (best-effort).
-      let photoUrl: string | null = null;
-      if (photoBase64) {
-        try {
-          photoUrl = await uploadItemPhoto(user.id, photoBase64);
-        } catch {
-          photoUrl = null;
-        }
-      }
-
-      await createItem({
-        userId: user.id,
-        photoUrl,
-        itemName: identification.itemName,
-        category: identification.category,
-        condition: identification.condition,
-        description: identification.description,
-        decision,
-        answers,
-        selectedService: { ...selectedService, scheduledDate },
-      });
-
-      haptics.success();
-      flow.reset();
-      router.replace('/' as any);
-    } catch (e: any) {
-      haptics.error();
-      setError(e.message ?? 'Could not save. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  if (!selectedService) {
+  if (!identification) {
     return (
-      <ThemedView style={styles.center}>
+      <ThemedView style={styles.container}>
         <ThemedText style={Typography.body} themeColor="textSecondary">
-          No service selected.
+          Nothing to confirm — please start over.
         </ThemedText>
+        <Button title="Back to camera" onPress={() => router.replace('/camera' as any)} style={styles.spaced} />
       </ThemedView>
     );
   }
 
   return (
     <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <ThemedText style={Typography.h2}>Confirm & save</ThemedText>
+      <View style={styles.content}>
+        {photoUri ? <Image source={{ uri: photoUri }} style={styles.photo} resizeMode="cover" /> : null}
+
+        <AgentMessage title="IS THIS RIGHT?">
+          <ThemedText style={Typography.body}>
+            I think this is the item below. Confirm so I can find local disposal options.
+          </ThemedText>
+        </AgentMessage>
 
         <Card variant="outlined" style={styles.card}>
           <ThemedText style={Typography.small} themeColor="textSecondary">
-            SELECTED SERVICE
+            DETECTED ITEM
           </ThemedText>
-          <ThemedText style={Typography.h3}>{selectedService.name}</ThemedText>
-          {selectedService.address ? (
-            <ThemedText style={Typography.caption} themeColor="textSecondary">
-              {selectedService.address}
+          <ThemedText style={[Typography.display, styles.itemName]}>
+            {identification.itemName}
+          </ThemedText>
+          <View style={styles.tag}>
+            <ThemedText style={styles.tagText}>
+              {CATEGORY_LABELS[identification.category] ?? identification.category}
+            </ThemedText>
+          </View>
+          {identification.description ? (
+            <ThemedText style={[Typography.caption, styles.desc]} themeColor="textSecondary">
+              {identification.description}
             </ThemedText>
           ) : null}
         </Card>
-
-        <ThemedText style={[Typography.bodyBold, styles.timingLabel]}>
-          When do you want to do this?
-        </ThemedText>
-        <View style={styles.options}>
-          {TIMING_OPTIONS.map((opt) => (
-            <OptionButton
-              key={opt.value}
-              label={opt.label}
-              selected={timing === opt.value}
-              onPress={() => setTiming(opt.value)}
-            />
-          ))}
-        </View>
-
-        {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
-      </ScrollView>
+      </View>
 
       <View style={styles.footer}>
         <Button
-          title="Confirm & save item"
+          title="Yes, that's right"
           size="lg"
-          onPress={handleConfirm}
-          loading={saving}
-          disabled={!timing}
+          onPress={() => router.push('/flow/location' as any)}
+        />
+        <Button
+          title="No — retake photo"
+          variant="ghost"
+          onPress={() => router.replace('/camera' as any)}
         />
       </View>
     </ThemedView>
@@ -141,26 +82,47 @@ export default function ConfirmScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.four },
-  scroll: {
+  container: {
+    flex: 1,
     padding: Spacing.four,
-    gap: Spacing.three,
+  },
+  content: {
+    flex: 1,
+    gap: Spacing.four,
+  },
+  photo: {
+    width: '100%',
+    height: 200,
+    borderRadius: BorderRadius.lg,
+    ...FlatBorder,
   },
   card: {
-    gap: Spacing.one,
-  },
-  timingLabel: {
-    marginTop: Spacing.two,
-  },
-  options: {
     gap: Spacing.two,
   },
-  error: {
-    ...Typography.small,
-    color: Colors.light.error,
+  itemName: {
+    color: Colors.light.text,
+    textTransform: 'capitalize',
+  },
+  tag: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.light.primaryLight,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    borderRadius: 999,
+    ...FlatBorder,
+  },
+  tagText: {
+    ...Typography.captionBold,
+    color: Colors.light.accent,
+  },
+  desc: {
+    marginTop: Spacing.one,
   },
   footer: {
-    padding: Spacing.four,
+    gap: Spacing.two,
+    paddingTop: Spacing.three,
+  },
+  spaced: {
+    marginTop: Spacing.three,
   },
 });

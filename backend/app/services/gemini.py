@@ -32,6 +32,24 @@ async def generate(system: str, user: str, *, max_output_tokens: int = 1024) -> 
     return response.text
 
 
+async def generate_json(system: str, user: str, *, max_output_tokens: int = 2048) -> str:
+    """Generate with JSON output forced and thinking disabled, so the response is
+    clean parseable JSON (gemini-2.5-flash is a thinking model and otherwise
+    truncates the JSON when reasoning eats the token budget)."""
+    client = _get_client()
+    response = await client.aio.models.generate_content(
+        model=settings.gemini_model,
+        contents=user,
+        config=types.GenerateContentConfig(
+            system_instruction=system,
+            max_output_tokens=max_output_tokens,
+            response_mime_type="application/json",
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
+        ),
+    )
+    return response.text
+
+
 def generate_sync(system: str, user: str, *, max_output_tokens: int = 1024) -> str:
     client = _get_client()
     response = client.models.generate_content(

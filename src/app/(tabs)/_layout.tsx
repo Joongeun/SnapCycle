@@ -45,19 +45,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="leaderboard"
-        options={{
-          title: 'Leaderboard',
-          tabBarIcon: ({ color, size }) => (
-            <SymbolView
-              name="trophy.fill"
-              tintColor={color}
-              size={size}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',

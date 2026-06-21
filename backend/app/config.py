@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     browserbase_api_key: str = ""
     browserbase_project_id: str = ""
 
+    # Yelp Fusion (junk-hauler search)
+    yelp_api_key: str = ""
+
     geoip_url: str = "http://ip-api.com/json"
     geo_max_match_km: float = 150.0  # closest-campus match only within this radius
     rag_top_k: int = 5

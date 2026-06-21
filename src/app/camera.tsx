@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, View, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, type CameraType } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
@@ -9,13 +10,13 @@ import { Button } from '@/components/ui/button';
 import { ThemedText } from '@/components/themed-text';
 import { Colors, FlatBorder, Spacing, Typography } from '@/constants/theme';
 import { useCamera } from '@/hooks/use-camera';
-import { useItemFlow } from '@/contexts/item-context';
+import { useDisposalFlow } from '@/contexts/disposal-context';
 import { processPhoto } from '@/utils/image';
 import { haptics } from '@/utils/haptics';
 
 export default function CameraScreen() {
   const { granted, requestPermission } = useCamera();
-  const { setPhoto } = useItemFlow();
+  const { setPhoto } = useDisposalFlow();
   const cameraRef = useRef<CameraView>(null);
   const [facing, setFacing] = useState<CameraType>('back');
   const [previewUri, setPreviewUri] = useState<string | null>(null);
@@ -29,7 +30,7 @@ export default function CameraScreen() {
         <View style={styles.permissionCard}>
           <ThemedText style={styles.permissionTitle}>Camera Access</ThemedText>
           <ThemedText style={styles.permissionBody}>
-            RRR2 needs your camera to photograph items for identification.
+            RRR needs your camera to photograph items for disposal guidance.
           </ThemedText>
           <Button title="Grant Permission" onPress={requestPermission} size="lg" />
           <Button
@@ -43,11 +44,20 @@ export default function CameraScreen() {
     );
   }
 
+  const [capturing, setCapturing] = useState(false);
+
   async function takePhoto() {
-    if (!cameraRef.current) return;
+    if (!cameraRef.current || capturing) return;
+    setCapturing(true);
     haptics.medium();
-    const shot = await cameraRef.current.takePictureAsync({ quality: 1 });
-    if (shot?.uri) setPreviewUri(shot.uri);
+    try {
+      const shot = await cameraRef.current.takePictureAsync({ quality: 1 });
+      if (shot?.uri) setPreviewUri(shot.uri);
+    } catch (e) {
+      // Camera was unmounted mid-capture (navigated away / fast double-tap) — ignore.
+    } finally {
+      setCapturing(false);
+    }
   }
 
   async function usePhoto() {
@@ -56,7 +66,23 @@ export default function CameraScreen() {
     try {
       const { uri, base64 } = await processPhoto(previewUri);
       setPhoto(uri, base64);
-      router.replace('/flow/identify');
+      router.replace('/flow/processing' as any);
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  async function uploadFromLibrary() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 1,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+    setProcessing(true);
+    try {
+      const { uri, base64 } = await processPhoto(result.assets[0].uri);
+      setPhoto(uri, base64);
+      router.replace('/flow/processing' as any);
     } finally {
       setProcessing(false);
     }
@@ -77,12 +103,7 @@ export default function CameraScreen() {
               style={styles.flexBtn}
               disabled={processing}
             />
-            <Button
-              title="Use Photo"
-              onPress={usePhoto}
-              loading={processing}
-              style={styles.flexBtn}
-            />
+            <Button title="Use Photo" onPress={usePhoto} loading={processing} style={styles.flexBtn} />
           </View>
         </SafeAreaView>
       </View>
@@ -113,9 +134,13 @@ export default function CameraScreen() {
         </View>
 
         <View style={styles.bottomBar}>
+          <Pressable onPress={uploadFromLibrary} style={styles.sideButton}>
+            <ThemedText style={styles.topButtonText}>Upload</ThemedText>
+          </Pressable>
           <Pressable onPress={takePhoto} style={styles.shutterOuter}>
             <View style={styles.shutterInner} />
           </Pressable>
+          <View style={styles.sideButtonSpacer} />
         </View>
       </SafeAreaView>
     </View>
@@ -192,8 +217,21 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   bottomBar: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.five,
     paddingBottom: Spacing.four,
+  },
+  sideButton: {
+    backgroundColor: Colors.light.background,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: 999,
+    ...FlatBorder,
+  },
+  sideButtonSpacer: {
+    width: 72,
   },
   shutterOuter: {
     width: 78,

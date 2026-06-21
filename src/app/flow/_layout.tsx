@@ -15,11 +15,14 @@ export default function FlowLayout() {
         animation: 'slide_from_right',
       }}
     >
-      <Stack.Screen name="identify" options={{ title: 'Identifying...' }} />
-      <Stack.Screen name="questions" options={{ title: 'Decision Time' }} />
-      <Stack.Screen name="result" options={{ title: 'Result', headerBackVisible: false }} />
-      <Stack.Screen name="services" options={{ title: 'Services' }} />
-      <Stack.Screen name="confirm" options={{ title: 'Confirm', headerBackVisible: false }} />
+      <Stack.Screen name="processing" options={{ title: 'Identifying…', headerBackVisible: false }} />
+      <Stack.Screen name="confirm" options={{ title: 'Confirm item', headerBackVisible: false }} />
+      <Stack.Screen name="location" options={{ title: 'Your location' }} />
+      <Stack.Screen
+        name="results"
+        options={{ title: 'Disposal options', headerBackVisible: false }}
+      />
+      <Stack.Screen name="action" options={{ title: 'Schedule' }} />
     </Stack>
   );
 }

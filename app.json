@@ -32,6 +32,12 @@
         }
       ],
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "RRR2 needs photo access so you can upload an item picture for disposal guidance."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#F3E7D3",

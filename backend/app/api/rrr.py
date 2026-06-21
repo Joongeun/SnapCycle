@@ -4,6 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.deps.auth import require_user_id
 from app.schemas.rrr import (
+    DisposalOptionsRequest,
+    DisposalOptionsResponse,
+    HaulersRequest,
+    HaulersResponse,
     IdentifyRequest,
     IdentifyResponse,
     ScheduleRequest,
@@ -11,6 +15,8 @@ from app.schemas.rrr import (
     ServicesRequest,
     ServicesResponse,
 )
+from app.services.rrr_disposal import discover_disposal_options
+from app.services.rrr_haulers import find_haulers
 from app.services.rrr_identify import identify_item_from_image
 from app.services.rrr_schedule import draft_schedule
 from app.services.rrr_service_discovery import discover_services
@@ -46,6 +52,38 @@ async def find_services(
         raise HTTPException(
             status_code=502,
             detail="Service discovery failed. Please try again.",
+        ) from exc
+
+
+@router.post("/disposal-options", response_model=DisposalOptionsResponse)
+async def disposal_options(
+    body: DisposalOptionsRequest,
+    _user_id: str = Depends(require_user_id),
+):
+    """Browserbase deep search + Redis cache + Gemini → ranked DisposalCards."""
+    try:
+        cards = await discover_disposal_options(body)
+        return DisposalOptionsResponse(cards=cards)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail="Could not find disposal options. Please try again.",
+        ) from exc
+
+
+@router.post("/haulers", response_model=HaulersResponse)
+async def haulers(
+    body: HaulersRequest,
+    _user_id: str = Depends(require_user_id),
+):
+    """Yelp Fusion search for local junk-removal haulers (tap-to-call)."""
+    try:
+        found = await find_haulers(body)
+        return HaulersResponse(haulers=found)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail="Could not find haulers. Please try again.",
         ) from exc
 
 

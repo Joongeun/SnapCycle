@@ -14,7 +14,7 @@ import {
 } from '@expo-google-fonts/hanken-grotesk';
 
 import { AuthProvider } from '@/contexts/auth-context';
-import { ItemProvider } from '@/contexts/item-context';
+import { DisposalProvider } from '@/contexts/disposal-context';
 import { useAuth } from '@/hooks/use-auth';
 import { Colors } from '@/constants/theme';
 
@@ -61,7 +61,7 @@ function AuthGate() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="camera" options={{ presentation: 'fullScreenModal' }} />
       <Stack.Screen name="flow" />
-      <Stack.Screen name="item" />
+      <Stack.Screen name="item/[id]" />
     </Stack>
   );
 }
@@ -93,9 +93,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={NavTheme}>
       <AuthProvider>
-        <ItemProvider>
+        <DisposalProvider>
           <AuthGate />
-        </ItemProvider>
+        </DisposalProvider>
       </AuthProvider>
     </ThemeProvider>
   );
