@@ -21,6 +21,7 @@ export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [capturing, setCapturing] = useState(false);
 
   // --- Permission gate ---------------------------------------------------
   if (!granted) {
@@ -43,8 +44,6 @@ export default function CameraScreen() {
       </SafeAreaView>
     );
   }
-
-  const [capturing, setCapturing] = useState(false);
 
   async function takePhoto() {
     if (!cameraRef.current || capturing) return;
