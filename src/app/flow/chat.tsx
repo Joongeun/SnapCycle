@@ -59,7 +59,10 @@ export default function ChatScreen() {
       >
         <ScrollView
           ref={scrollRef}
+          style={styles.flex}
           contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
           onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
         >
           {messages.map((m) => (
@@ -82,7 +85,7 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   flex: { flex: 1 },
-  scroll: { padding: Spacing.four, gap: Spacing.three },
+  scroll: { flexGrow: 1, padding: Spacing.four, gap: Spacing.three },
   typing: { paddingLeft: Spacing.six },
   inputWrap: { paddingHorizontal: Spacing.four, paddingBottom: Spacing.four },
 });

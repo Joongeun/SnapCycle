@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 
-import { getOnboarding, type OnboardingState } from '@/services/onboarding';
+import { getOnboarding, resetOnboarding, type OnboardingState } from '@/services/onboarding';
 import { useAuth } from '@/hooks/use-auth';
 
 const EMPTY: OnboardingState = { completed: false, address: '', zip: '', location: '' };
@@ -10,6 +10,8 @@ interface OnboardingContextValue extends OnboardingState {
   reload: () => Promise<void>;
   /** Optimistically mark onboarding done so the gate lets the user through immediately. */
   markComplete: (data: { address: string; zip: string; location: string }) => void;
+  /** Clear onboarding so the gate re-shows the onboarding flow (dev/testing). */
+  reset: () => Promise<void>;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
@@ -41,8 +43,13 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const reset = useCallback(async () => {
+    if (user) await resetOnboarding(user.id);
+    setState(EMPTY);
+  }, [user]);
+
   return (
-    <OnboardingContext.Provider value={{ ...state, loading, reload, markComplete }}>
+    <OnboardingContext.Provider value={{ ...state, loading, reload, markComplete, reset }}>
       {children}
     </OnboardingContext.Provider>
   );

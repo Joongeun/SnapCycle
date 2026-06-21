@@ -1,5 +1,6 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 
 import { Button } from '@/components/ui/button';
 import { StatsCard } from '@/components/leaderboard/stats-card';
@@ -7,12 +8,19 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing, Typography } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
+import { useOnboarding } from '@/contexts/onboarding-context';
 import { useProfile } from '@/hooks/use-profile';
 import { formatDate } from '@/utils/format';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
+  const { reset: resetOnboarding } = useOnboarding();
+
+  async function replayOnboarding() {
+    await resetOnboarding();
+    router.replace('/onboarding' as any);
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -47,6 +55,7 @@ export default function ProfileScreen() {
         </ScrollView>
 
         <View style={styles.footer}>
+          <Button title="Replay onboarding" variant="ghost" onPress={replayOnboarding} />
           <Button title="Sign Out" variant="outline" onPress={signOut} />
         </View>
       </SafeAreaView>
@@ -88,5 +97,6 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.four,
+    gap: Spacing.two,
   },
 });

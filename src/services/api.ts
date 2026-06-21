@@ -16,6 +16,7 @@ import type {
   ServicesResponse,
   TriageRequest,
   TriageResponse,
+  YelpOutreachRequest,
 } from '@/types/api';
 import type { ItemCategory } from '@/types/item';
 import type { DisposalCard, Hauler } from '@/types/disposal';
@@ -115,6 +116,10 @@ export async function getAgentFormStatus(sessionId: string): Promise<AgentFormSe
   return apiGet(`/api/agent/form/${sessionId}`);
 }
 
+export async function startYelpOutreach(request: YelpOutreachRequest): Promise<AgentFormSession> {
+  return apiPost('/api/agent/yelp', request);
+}
+
 export async function discoverServices(request: ServicesRequest): Promise<ServicesResponse> {
   return apiPost('/api/services', request);
 }
@@ -128,6 +133,8 @@ export interface DisposalOptionsRequest {
   category: ItemCategory;
   location: string;
   zip?: string;
+  /** Free-text note, e.g. "it's broken / won't turn on". */
+  note?: string;
 }
 
 export async function getDisposalOptions(

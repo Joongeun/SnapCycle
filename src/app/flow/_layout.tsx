@@ -32,6 +32,7 @@ export default function FlowLayout() {
         <Stack.Screen name="results" options={{ title: 'Disposal options', headerBackVisible: false }} />
         <Stack.Screen name="action" options={{ title: 'Schedule' }} />
         <Stack.Screen name="agent-form" options={{ title: 'Fill out form' }} />
+        <Stack.Screen name="agent-yelp" options={{ title: 'Message haulers' }} />
         <Stack.Screen name="confirm-disposal" options={{ title: 'Confirm disposal', headerBackVisible: false }} />
         <Stack.Screen name="chat" options={{ title: 'Ask the assistant', presentation: 'modal' }} />
       </Stack>

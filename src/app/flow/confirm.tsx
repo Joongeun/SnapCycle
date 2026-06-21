@@ -1,9 +1,10 @@
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 
 import { AgentMessage } from '@/components/disposal/agent-message';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BorderRadius, Colors, FlatBorder, Spacing, Typography } from '@/constants/theme';
@@ -21,7 +22,12 @@ const CATEGORY_LABELS: Record<ItemCategory, string> = {
 };
 
 export default function ConfirmScreen() {
-  const { identification, photoUri } = useDisposalFlow();
+  const { identification, photoUri, note, setNote } = useDisposalFlow();
+
+  const isElectronics = identification?.category === 'electronics';
+  const notePrompt = isElectronics
+    ? 'Is it working or broken? Tell me here — broken electronics go to e-waste, not donation.'
+    : "Anything I should know? e.g. it's broken, stained, or missing parts.";
 
   if (!identification) {
     return (
@@ -36,7 +42,12 @@ export default function ConfirmScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.content}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {photoUri ? <Image source={{ uri: photoUri }} style={styles.photo} resizeMode="cover" /> : null}
 
         <AgentMessage title="IS THIS RIGHT?">
@@ -63,7 +74,18 @@ export default function ConfirmScreen() {
             </ThemedText>
           ) : null}
         </Card>
-      </View>
+
+        <Input
+          label="CONDITION / NOTES"
+          placeholder={notePrompt}
+          value={note}
+          onChangeText={setNote}
+          multiline
+          numberOfLines={3}
+          containerStyle={styles.noteField}
+          style={styles.noteInput}
+        />
+      </ScrollView>
 
       <View style={styles.footer}>
         <Button
@@ -77,18 +99,28 @@ export default function ConfirmScreen() {
           onPress={() => router.replace('/camera' as any)}
         />
       </View>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   container: {
     flex: 1,
     padding: Spacing.four,
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     gap: Spacing.four,
+    paddingBottom: Spacing.four,
+  },
+  noteField: {
+    marginBottom: 0,
+  },
+  noteInput: {
+    minHeight: 80,
+    textAlignVertical: 'top',
   },
   photo: {
     width: '100%',

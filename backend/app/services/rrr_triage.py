@@ -37,16 +37,21 @@ A user wants to get rid of an item. Decide the SIMPLEST correct path in this ord
    Set disposableAtHome=false so the app can research special pathways.
 
 Prefer the local curbside rules in the reference material when they are provided.
-Be conservative: if unsure whether it fits in a home bin, set disposableAtHome=false."""
+Be conservative: if unsure whether it fits in a home bin, set disposableAtHome=false.
+
+If the user note says the item is BROKEN or DAMAGED, do NOT treat it as home-disposable
+unless it is genuinely small enough for the trash bin — broken electronics and appliances
+in particular need a special e-waste/recycling pathway, so set disposableAtHome=false."""
 
 
 def _cache_key(req: TriageRequest) -> str:
-    raw = f"{req.location.lower()}:{req.category}:{req.itemName.lower()}"
+    raw = f"{req.location.lower()}:{req.category}:{req.itemName.lower()}:{req.note.lower()}"
     return f"triage:{hashlib.sha256(raw.encode()).hexdigest()}"
 
 
 def _build_prompt(req: TriageRequest, rag_context: str) -> str:
-    return f"""Item: {req.itemName} ({req.category})
+    note_line = f'\nUser note about condition: "{req.note}"' if req.note.strip() else ""
+    return f"""Item: {req.itemName} ({req.category}){note_line}
 Location: {req.location or 'unknown'}
 
 Local curbside reference (may be empty):

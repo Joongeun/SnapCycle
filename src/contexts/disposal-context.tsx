@@ -7,6 +7,8 @@ interface DisposalFlowState {
   photoUri: string | null;
   photoBase64: string | null;
   identification: IdentifyResponse | null;
+  /** Free-text note from the user, e.g. "it's broken / won't turn on". */
+  note: string;
   location: string;
   zip: string;
   options: DisposalCard[] | null;
@@ -22,6 +24,7 @@ interface DisposalFlowState {
 interface DisposalContextValue extends DisposalFlowState {
   setPhoto: (uri: string, base64: string) => void;
   setIdentification: (identification: IdentifyResponse) => void;
+  setNote: (note: string) => void;
   setLocation: (location: string, zip?: string) => void;
   setOptions: (cards: DisposalCard[]) => void;
   setSelectedCard: (card: DisposalCard) => void;
@@ -35,6 +38,7 @@ const emptyState: DisposalFlowState = {
   photoUri: null,
   photoBase64: null,
   identification: null,
+  note: '',
   location: '',
   zip: '',
   options: null,
@@ -57,6 +61,7 @@ export function DisposalProvider({ children }: { children: ReactNode }) {
     setPhoto: (photoUri, photoBase64) =>
       setState((s) => ({ ...emptyState, location: s.location, zip: s.zip, photoUri, photoBase64 })),
     setIdentification: (identification) => setState((s) => ({ ...s, identification })),
+    setNote: (note) => setState((s) => ({ ...s, note })),
     setLocation: (location, zip) => setState((s) => ({ ...s, location, zip: zip ?? s.zip })),
     setOptions: (options) => setState((s) => ({ ...s, options })),
     setSelectedCard: (selectedCard) => setState((s) => ({ ...s, selectedCard })),

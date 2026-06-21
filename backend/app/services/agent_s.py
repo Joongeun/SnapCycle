@@ -28,8 +28,10 @@ import re
 import uuid
 from typing import Dict, List, Optional
 
+from urllib.parse import quote_plus
+
 from app.config import settings
-from app.schemas.rrr import AgentFormRequest, AgentFormSession
+from app.schemas.rrr import AgentFormRequest, AgentFormSession, YelpOutreachRequest
 from app.services.browserbase import (
     create_session,
     session_connect_url,
@@ -188,6 +190,198 @@ def _scrape_fields(page) -> List[dict]:
 
 def _css_escape(value: str) -> str:
     return re.sub(r'([^a-zA-Z0-9_-])', r"\\\1", value)
+
+
+# --------------------------------------------------------------------------- #
+# Yelp hauler outreach: open Yelp, let the user sign in, message the top haulers
+# --------------------------------------------------------------------------- #
+
+def _default_message(req: YelpOutreachRequest) -> str:
+    item = req.itemName or "an item"
+    desc = f" ({req.itemDescription})" if req.itemDescription else ""
+    return (
+        f"Hi! I'd like a quote to haul away {item}{desc} from {req.location}. "
+        "What's your availability and pricing? Thanks!"
+    )
+
+
+async def start_yelp_outreach(req: YelpOutreachRequest) -> AgentFormSession:
+    """Create a live Browserbase session pointed at Yelp; message haulers in the bg."""
+    session_id = uuid.uuid4().hex
+
+    if not settings.agent_s_enabled or not settings.browserbase_api_key:
+        state = AgentFormSession(
+            sessionId=session_id,
+            liveViewUrl="",
+            status="error",
+            detail="Agent S/Browserbase not configured — open Yelp manually.",
+        )
+        _sessions[session_id] = state
+        return state
+
+    try:
+        bb_session = await asyncio.to_thread(create_session)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Browserbase session create failed: %s", exc)
+        state = AgentFormSession(sessionId=session_id, liveViewUrl="", status="error", detail=str(exc))
+        _sessions[session_id] = state
+        return state
+
+    bb_id = getattr(bb_session, "id", None)
+    connect_url = session_connect_url(bb_session)
+    live_url = await asyncio.to_thread(session_live_view_url, bb_id) if bb_id else None
+
+    state = AgentFormSession(
+        sessionId=session_id,
+        liveViewUrl=live_url or "",
+        status="filling",
+        detail="Opening Yelp — sign in to your account in this view to message haulers.",
+    )
+    _sessions[session_id] = state
+
+    asyncio.create_task(_run_yelp(session_id, connect_url, req))
+    return state
+
+
+async def _run_yelp(session_id: str, connect_url: Optional[str], req: YelpOutreachRequest) -> None:
+    if not connect_url:
+        _update(session_id, "error", "No CDP endpoint for the browser session.")
+        return
+    try:
+        await asyncio.to_thread(_yelp_outreach_sync, session_id, connect_url, req)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Yelp outreach failed for %s: %s", session_id, exc)
+        _update(session_id, "error", f"Could not message haulers: {exc}")
+
+
+def _yelp_outreach_sync(session_id: str, connect_url: str, req: YelpOutreachRequest) -> None:
+    """Best-effort Yelp navigation + message drafting. DOM selectors are resilient
+    but Yelp changes often — this stops before sending so the signed-in user reviews
+    and sends each message themselves in the live view."""
+    from playwright.sync_api import sync_playwright
+
+    message = req.message.strip() or _default_message(req)
+
+    with sync_playwright() as p:
+        browser = p.chromium.connect_over_cdp(connect_url)
+        context = browser.contexts[0] if browser.contexts else browser.new_context()
+        page = context.pages[0] if context.pages else context.new_page()
+
+        search_url = (
+            f"https://www.yelp.com/search?find_desc=junk+removal&find_loc={quote_plus(req.location)}"
+        )
+        page.goto(search_url, wait_until="domcontentloaded", timeout=45000)
+        _update(session_id, "filling", "Opened Yelp. Sign in to your account in this view…")
+
+        if not _wait_for_yelp_login(page, timeout_s=120):
+            _update(
+                session_id,
+                "ready",
+                "Sign in to Yelp in this view, then reopen to message the haulers.",
+            )
+            return
+
+        _update(session_id, "filling", "Signed in. Finding the top junk haulers…")
+        links = _top_business_links(page, limit=max(1, req.maxHaulers))
+        if not links:
+            _update(session_id, "ready", "Couldn't read the hauler list — browse Yelp here directly.")
+            return
+
+        drafted = 0
+        for url in links:
+            try:
+                if _message_business(context, url, message):
+                    drafted += 1
+                    _update(
+                        session_id, "filling", f"Drafted a message to hauler {drafted} of {len(links)}…"
+                    )
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("Yelp message draft skipped (%s): %s", url, exc)
+
+        if drafted:
+            _update(
+                session_id,
+                "ready",
+                f"Drafted messages to {drafted} hauler(s). Review each and tap Send in the view.",
+            )
+        else:
+            _update(
+                session_id,
+                "ready",
+                "Opened the top haulers — use 'Request a Quote' in the view to message them.",
+            )
+
+
+def _wait_for_yelp_login(page, *, timeout_s: int = 120) -> bool:
+    """Poll for a signed-in indicator (user menu / no visible Log In button)."""
+    import time
+
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        try:
+            # Yelp shows a user-avatar menu when signed in; the "Log In" link disappears.
+            logged_out = page.query_selector("a[href*='login'], a:has-text('Log In')")
+            avatar = page.query_selector(
+                "[data-testid='user-menu'], button[aria-label*='profile' i], img[alt*='avatar' i]"
+            )
+            if avatar and not logged_out:
+                return True
+        except Exception:  # noqa: BLE001
+            pass
+        time.sleep(2)
+    return False
+
+
+def _top_business_links(page, *, limit: int = 3) -> List[str]:
+    """Collect the top organic business URLs from a Yelp search results page."""
+    urls: List[str] = []
+    try:
+        handles = page.query_selector_all("a[href*='/biz/']")
+        for el in handles:
+            href = el.get_attribute("href") or ""
+            if "/biz/" not in href:
+                continue
+            full = href if href.startswith("http") else f"https://www.yelp.com{href}"
+            full = full.split("?")[0]
+            if full not in urls:
+                urls.append(full)
+            if len(urls) >= limit:
+                break
+    except Exception:  # noqa: BLE001
+        pass
+    return urls
+
+
+def _message_business(context, biz_url: str, message: str) -> bool:
+    """Open a business page and pre-fill its 'Request a Quote'/message box. Never sends."""
+    page = context.new_page()
+    try:
+        page.goto(biz_url, wait_until="domcontentloaded", timeout=45000)
+        # Try to open the quote/message flow.
+        for sel in (
+            "a:has-text('Request a Quote')",
+            "button:has-text('Request a Quote')",
+            "a:has-text('Request pricing')",
+            "button:has-text('Message')",
+            "a:has-text('Message the')",
+        ):
+            try:
+                btn = page.query_selector(sel)
+                if btn:
+                    btn.click()
+                    page.wait_for_timeout(1500)
+                    break
+            except Exception:  # noqa: BLE001
+                continue
+        # Fill the first visible message textarea.
+        box = page.query_selector("textarea")
+        if box:
+            box.fill(message)
+            return True
+        return False
+    finally:
+        # Leave the page open in the session so the signed-in user can review + send.
+        pass
 
 
 def _decide_values_blocking(fields: List[dict], req: AgentFormRequest) -> Dict[str, str]:

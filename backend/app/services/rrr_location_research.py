@@ -28,29 +28,55 @@ from app.services.gemini import generate_json
 logger = logging.getLogger(__name__)
 
 RESEARCH_SYSTEM = """You are a local waste-and-disposal research agent for the RRR app.
-You build a durable knowledge base for ONE location that residents will later query
-to learn how to dispose of nontraditional items (furniture, appliances, e-waste,
-mattresses, household hazardous waste).
+You build a durable, EXHAUSTIVE knowledge base for ONE location that residents will
+later query to dispose of nontraditional items (furniture, appliances, e-waste,
+mattresses, household hazardous waste, textiles, etc.).
+
+Be thorough — go well beyond the obvious municipal options. Specifically hunt for:
+- Hyper-local and seasonal programs: college/university move-out donation drives
+  (e.g. UC Berkeley "Cal Move-Out"), neighborhood reuse/rummage events and charity
+  warehouse sales (e.g. the Oakland "White Elephant Sale"), Buy Nothing / Freecycle
+  groups, swap meets.
+- Category-specific collectives and take-back programs: mattress recycling
+  (e.g. Bye Bye Mattress / MRC drop-off), e-waste collectives and CRT/electronics
+  recyclers, household-hazardous-waste (HHW) facilities, textile/clothing recyclers,
+  scrap-metal yards, paint (PaintCare) and battery take-back, creative reuse centers
+  (e.g. East Bay Depot for Creative Reuse).
+- Donation orgs with doorfront pickup, thrift stores (Habitat ReStore, Goodwill,
+  Salvation Army), and city/collective bulky pickup.
+
 Use the provided web reference material as the primary source of truth. When the
 material is thin, you may add well-established general knowledge for that locale,
 but never invent specific program names, phone numbers, or URLs.
 Capture eligibility CONSTRAINTS precisely (e.g. "Berkeley free bulky pickup requires
-a 4-9 unit building and the landlord must call to schedule")."""
+a 4-9 unit building and the landlord must call to schedule").
+Prefer many specific, named programs over a few generic ones."""
 
 
 def _search_queries(location: str) -> List[str]:
     return [
         f"{location} curbside recycling and trash rules what goes in which bin",
         f"{location} bulky item pickup program eligibility how to schedule",
-        f"{location} household hazardous waste and e-waste drop-off locations",
-        f"{location} furniture donation pickup charities",
+        f"{location} household hazardous waste HHW and e-waste drop-off locations",
+        f"{location} furniture donation pickup charities Habitat ReStore Goodwill",
+        f"{location} mattress recycling drop-off Bye Bye Mattress",
+        f"{location} creative reuse center textile clothing recycling scrap metal",
+        f"{location} college university move-out donation drive free reuse",
+        f"{location} reuse rummage charity warehouse sale white elephant swap",
+        f"{location} Buy Nothing Freecycle free curb alert give away",
     ]
 
 
 async def _gather_pages(location: str) -> List[dict]:
+    # Cap pages PER QUERY (not globally front-loaded) so every category — including
+    # the niche/hyper-local queries at the end of the list — actually contributes.
+    pages_per_query = 2
+    max_pages = 14
     pages: List[dict] = []
     seen: set[str] = set()
     for query in _search_queries(location):
+        if len(pages) >= max_pages:
+            break
         try:
             results = await asyncio.to_thread(
                 search_web, query, num_results=settings.browserbase_search_num_results
@@ -58,7 +84,10 @@ async def _gather_pages(location: str) -> List[dict]:
         except Exception as exc:  # noqa: BLE001 — Browserbase optional
             logger.warning("Location research search failed (%r): %s", query, exc)
             continue
+        added_for_query = 0
         for result in results:
+            if added_for_query >= pages_per_query or len(pages) >= max_pages:
+                break
             url = result.get("url")
             if not url or url in seen:
                 continue
@@ -73,10 +102,9 @@ async def _gather_pages(location: str) -> List[dict]:
                             "content": page["content"][:6000],
                         }
                     )
+                    added_for_query += 1
             except Exception as exc:  # noqa: BLE001
                 logger.warning("Location research fetch failed for %s: %s", url, exc)
-            if len(pages) >= 8:
-                return pages
     return pages
 
 
@@ -91,6 +119,12 @@ def _build_prompt(location: str, pages: List[dict]) -> str:
 Web reference material:
 {refs_block}
 
+Be comprehensive: include EVERY distinct real program you find, especially niche and
+hyper-local ones (mattress/e-waste/HHW collectives, creative-reuse centers, textile
+and scrap-metal recyclers, college move-out drives, neighborhood reuse/rummage sales,
+Buy Nothing groups), not just the city's curbside and bulky-pickup services. Aim for
+8 or more docs when the material supports it.
+
 Return ONLY valid JSON (no markdown fences) in this exact shape:
 {{
   "summary": "2-3 sentence overview of how disposal works in this area",
@@ -100,8 +134,8 @@ Return ONLY valid JSON (no markdown fences) in this exact shape:
   }},
   "docs": [
     {{
-      "type": "bulky_pickup | recycling | trash | hhw | ewaste | donation | program",
-      "title": "Program or rule name",
+      "type": "bulky_pickup | recycling | trash | hhw | ewaste | mattress | textile | scrap_metal | donation | reuse_event | college_program | buy_nothing | program",
+      "title": "Specific program or rule name (use the real name when known)",
       "text": "Concise factual description residents can act on",
       "constraints": ["eligibility or scheduling constraints, if any"],
       "sourceUrl": "https://... or null"

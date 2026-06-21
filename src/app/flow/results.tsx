@@ -28,6 +28,7 @@ export default function ResultsScreen() {
     identification,
     location,
     zip,
+    note,
     options,
     priorityStat,
     setOptions,
@@ -57,6 +58,7 @@ export default function ResultsScreen() {
       category: identification.category,
       location,
       zip,
+      note,
     })
       .then(({ cards }) => {
         setOptions(cards);
@@ -83,6 +85,10 @@ export default function ResultsScreen() {
 
   function askQuestion() {
     router.push('/flow/chat' as any);
+  }
+
+  function messageHaulers() {
+    router.push('/flow/agent-yelp' as any);
   }
 
   return (
@@ -128,6 +134,15 @@ export default function ResultsScreen() {
         </ScrollView>
       )}
 
+      {status === 'populated' ? (
+        <Button
+          title="Message local haulers via Yelp"
+          variant="outline"
+          onPress={messageHaulers}
+          style={styles.haulerBtn}
+        />
+      ) : null}
+
       <View style={styles.footerRow}>
         {status === 'populated' ? (
           <Button title="Ask a question" variant="ghost" onPress={askQuestion} />
@@ -171,8 +186,11 @@ const styles = StyleSheet.create({
   footer: {
     paddingTop: Spacing.three,
   },
+  haulerBtn: {
+    marginTop: Spacing.three,
+  },
   footerRow: {
-    paddingTop: Spacing.three,
+    paddingTop: Spacing.two,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

@@ -24,8 +24,9 @@ from app.schemas.rrr import (
     ServicesResponse,
     TriageRequest,
     TriageResponse,
+    YelpOutreachRequest,
 )
-from app.services.agent_s import get_form_status, start_form_fill
+from app.services.agent_s import get_form_status, start_form_fill, start_yelp_outreach
 from app.services.rrr_card_agent import get_card_detail
 from app.services.rrr_chat import answer_question
 from app.services.rrr_disposal import discover_disposal_options
@@ -115,11 +116,25 @@ async def agent_form_status(
     session_id: str,
     _user_id: str = Depends(require_user_id),
 ):
-    """Poll the Agent S form-fill status."""
+    """Poll the Agent S form-fill status (shared by the Yelp outreach flow)."""
     state = get_form_status(session_id)
     if not state:
         raise HTTPException(status_code=404, detail="Unknown form session")
     return state
+
+
+@router.post("/agent/yelp", response_model=AgentFormSession)
+async def agent_yelp_start(
+    body: YelpOutreachRequest,
+    _user_id: str = Depends(require_user_id),
+):
+    """Agent S opens Yelp; the user signs in and it drafts messages to the top haulers."""
+    try:
+        return await start_yelp_outreach(body)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502, detail="Could not start the Yelp agent. Please try again."
+        ) from exc
 
 
 @router.post("/identify", response_model=IdentifyResponse)

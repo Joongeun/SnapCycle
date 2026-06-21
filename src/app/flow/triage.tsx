@@ -16,7 +16,7 @@ import { triageItem } from '@/services/api';
  * non-traditional pathways (the cards page).
  */
 export default function TriageScreen() {
-  const { identification, location, zip, setLocation } = useDisposalFlow();
+  const { identification, location, zip, note, setLocation } = useDisposalFlow();
   const onboarding = useOnboarding();
   const [error, setError] = useState('');
 
@@ -41,6 +41,7 @@ export default function TriageScreen() {
       category: identification.category,
       location: effLocation,
       zip: effZip,
+      note,
     })
       .then((res) => {
         if (!active) return;

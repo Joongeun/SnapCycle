@@ -52,6 +52,8 @@ export interface TriageRequest {
   category: ItemCategory;
   location?: string;
   zip?: string;
+  /** Free-text note, e.g. "it's broken / cracked screen". */
+  note?: string;
 }
 
 export interface TriageResponse {
@@ -140,4 +142,13 @@ export interface AgentFormSession {
   liveViewUrl: string;
   status: 'filling' | 'ready' | 'error';
   detail: string;
+}
+
+// --- Agent S Yelp hauler outreach ---
+export interface YelpOutreachRequest {
+  location: string;
+  itemName?: string;
+  itemDescription?: string;
+  message?: string;
+  maxHaulers?: number;
 }

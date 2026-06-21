@@ -94,6 +94,9 @@ class DisposalOptionsRequest(BaseModel):
     category: ItemCategory
     location: str
     zip: str = ""
+    # Free-text note from the user, e.g. "it's broken / won't turn on". Lets the
+    # agent route damaged electronics to e-waste/recycling instead of donation.
+    note: str = ""
 
 
 class DisposalOptionsResponse(BaseModel):
@@ -110,6 +113,9 @@ class TriageRequest(BaseModel):
     category: ItemCategory
     location: str = ""
     zip: str = ""
+    # Free-text note, e.g. "screen is cracked / it's broken". Damaged items
+    # (especially electronics) should not be assumed home-disposable or donatable.
+    note: str = ""
 
 
 class TriageResponse(BaseModel):
@@ -203,6 +209,16 @@ class AgentFormSession(BaseModel):
     liveViewUrl: str
     status: Literal["filling", "ready", "error"] = "filling"
     detail: str = ""
+
+
+class YelpOutreachRequest(BaseModel):
+    """Agent S opens Yelp, the user signs in, then it messages the top junk haulers."""
+    location: str
+    itemName: str = ""
+    itemDescription: str = ""
+    # Optional custom message; a sensible default is generated when blank.
+    message: str = ""
+    maxHaulers: int = 3
 
 
 # --- Yelp haulers ----------------------------------------------------------

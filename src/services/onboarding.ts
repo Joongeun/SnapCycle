@@ -27,6 +27,15 @@ export async function getOnboarding(userId: string): Promise<OnboardingState> {
   return EMPTY;
 }
 
+/** Clear the local onboarding flag so the gate re-shows onboarding (dev/testing). */
+export async function resetOnboarding(userId: string): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(key(userId));
+  } catch {
+    // ignore
+  }
+}
+
 export async function saveOnboarding(
   userId: string,
   data: { address: string; zip: string; location: string },
