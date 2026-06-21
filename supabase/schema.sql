@@ -15,13 +15,15 @@ create table if not exists public.profiles (
   default_location text,
   address text,
   zip text,
-  onboarding_complete boolean not null default false
+  onboarding_complete boolean not null default false,
+  preferences jsonb not null default '{}'::jsonb
 );
 
 -- Backfill for existing deployments (no-op on a fresh DB).
 alter table public.profiles add column if not exists address text;
 alter table public.profiles add column if not exists zip text;
 alter table public.profiles add column if not exists onboarding_complete boolean not null default false;
+alter table public.profiles add column if not exists preferences jsonb not null default '{}'::jsonb;
 
 alter table public.profiles enable row level security;
 

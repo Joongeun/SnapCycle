@@ -86,8 +86,42 @@ export interface Recommendation {
 export interface CardDetailRequest {
   card: DisposalCard;
   itemName: string;
+  category?: ItemCategory;
   location?: string;
   zip?: string;
+}
+
+export interface PreferenceRecordRequest {
+  event: 'card_selected' | 'disposal_completed' | 'service_search' | 'triage_home';
+  itemName?: string;
+  category?: ItemCategory;
+  disposalMethod?: string;
+  decision?: string;
+  location?: string;
+  zip?: string;
+}
+
+export interface PreferenceTagResponse {
+  id: string;
+  label: string;
+  tone: 'neutral' | 'donate' | 'sell' | 'discard' | 'accent';
+  source?: string;
+}
+
+export interface UserPreferenceMemory {
+  tags: PreferenceTagResponse[];
+  inferred: {
+    preferredDecision?: string | null;
+    pickupLocation?: string | null;
+    wasteTypes?: string[];
+  };
+  stats: {
+    totalEvents: number;
+    decisionCounts?: Record<string, number>;
+    categoryCounts?: Record<string, number>;
+  };
+  recentEvents: Array<Record<string, unknown>>;
+  updatedAt?: string | null;
 }
 
 export interface CardDetailResponse {

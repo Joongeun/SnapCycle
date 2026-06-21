@@ -4,18 +4,25 @@ import { router } from 'expo-router';
 
 import { Button } from '@/components/ui/button';
 import { StatsCard } from '@/components/leaderboard/stats-card';
+import { PreferenceTags } from '@/components/profile/preference-tags';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing, Typography } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useOnboarding } from '@/contexts/onboarding-context';
 import { useProfile } from '@/hooks/use-profile';
+import { usePreferenceMemory } from '@/hooks/use-preference-memory';
+import { preferencesToTags } from '@/services/preferences';
+import { EMPTY_PREFERENCES } from '@/types/preferences';
 import { formatDate } from '@/utils/format';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
   const { reset: resetOnboarding } = useOnboarding();
+  const { tags: learnedTags } = usePreferenceMemory();
+  const explicitTags = preferencesToTags(profile?.preferences ?? EMPTY_PREFERENCES);
+  const preferenceTags = learnedTags.length > 0 ? learnedTags : explicitTags;
 
   async function replayOnboarding() {
     await resetOnboarding();
@@ -44,6 +51,28 @@ export default function ProfileScreen() {
                 </ThemedText>
               ) : null}
             </View>
+          </View>
+
+          <View style={styles.prefsSection}>
+            <ThemedText style={[Typography.captionBold, styles.prefsTitle]}>
+              {learnedTags.length > 0 ? 'LEARNED PREFERENCES' : 'YOUR PREFERENCES'}
+            </ThemedText>
+            <PreferenceTags tags={preferenceTags} />
+            {learnedTags.length > 0 ? (
+              <ThemedText style={Typography.caption} themeColor="textSecondary">
+                Inferred from your disposal history
+              </ThemedText>
+            ) : null}
+            {profile?.defaultLocation ? (
+              <ThemedText style={Typography.caption} themeColor="textSecondary">
+                Pickup area: {profile.defaultLocation}
+              </ThemedText>
+            ) : null}
+            <Button
+              title="Edit preferences"
+              variant="outline"
+              onPress={() => router.push('/preferences' as any)}
+            />
           </View>
 
           <StatsCard
@@ -94,6 +123,13 @@ const styles = StyleSheet.create({
   identityText: {
     flex: 1,
     gap: 2,
+  },
+  prefsSection: {
+    gap: Spacing.three,
+  },
+  prefsTitle: {
+    letterSpacing: 1,
+    color: Colors.light.textSecondary,
   },
   footer: {
     padding: Spacing.four,

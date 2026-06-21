@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Card } from '@/components/ui/card';
 import { ItemCard } from '@/components/item/item-card';
+import { PreferenceTags } from '@/components/profile/preference-tags';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BorderRadius, Colors, FlatBorder, Spacing, Typography } from '@/constants/theme';
@@ -13,6 +14,9 @@ import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useProfile } from '@/hooks/use-profile';
 import { useItems } from '@/hooks/use-items';
+import { usePreferenceMemory } from '@/hooks/use-preference-memory';
+import { preferencesToTags } from '@/services/preferences';
+import { EMPTY_PREFERENCES } from '@/types/preferences';
 
 function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
   return (
@@ -30,7 +34,10 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { items } = useItems();
+  const { tags: learnedTags } = usePreferenceMemory();
   const recent = items.slice(0, 3);
+  const explicitTags = preferencesToTags(profile?.preferences ?? EMPTY_PREFERENCES);
+  const preferenceTags = learnedTags.length > 0 ? learnedTags : explicitTags;
 
   return (
     <ThemedView style={styles.container}>
@@ -57,6 +64,26 @@ export default function HomeScreen() {
           <ThemedText style={Typography.caption} themeColor="textSecondary">
             Take a photo to get started
           </ThemedText>
+        </View>
+
+        <View style={styles.statsSection}>
+          <ThemedText style={[Typography.captionBold, styles.sectionTitle]}>
+            {learnedTags.length > 0 ? 'LEARNED PREFERENCES' : 'YOUR PREFERENCES'}
+          </ThemedText>
+          <Card variant="outlined" padding="three">
+            <PreferenceTags
+              tags={preferenceTags}
+              onPress={() => router.push('/preferences' as any)}
+              emptyLabel={
+                learnedTags.length > 0 ? 'Still learning…' : 'Set your preferences'
+              }
+            />
+            {learnedTags.length > 0 ? (
+              <ThemedText style={[Typography.caption, { marginTop: Spacing.two }]} themeColor="textSecondary">
+                Inferred from your disposal history
+              </ThemedText>
+            ) : null}
+          </Card>
         </View>
 
         <View style={styles.statsSection}>

@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabase } from './supabase';
+import type { UserPreferences } from '@/types/preferences';
+import { EMPTY_PREFERENCES } from '@/types/preferences';
 
 export interface OnboardingState {
   completed: boolean;
@@ -38,7 +40,7 @@ export async function resetOnboarding(userId: string): Promise<void> {
 
 export async function saveOnboarding(
   userId: string,
-  data: { address: string; zip: string; location: string },
+  data: { address: string; zip: string; location: string; preferences?: UserPreferences },
 ): Promise<void> {
   const state: OnboardingState = { ...data, completed: true };
   await AsyncStorage.setItem(key(userId), JSON.stringify(state));
@@ -52,6 +54,7 @@ export async function saveOnboarding(
         zip: data.zip,
         default_location: data.location,
         onboarding_complete: true,
+        preferences: data.preferences ?? EMPTY_PREFERENCES,
       })
       .eq('id', userId);
   } catch {

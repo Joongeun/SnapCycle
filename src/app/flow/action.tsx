@@ -44,7 +44,13 @@ export default function ActionScreen() {
     }
     let active = true;
     setDetailStatus('loading');
-    getCardDetail({ card: selectedCard, itemName: identification?.itemName ?? '', location, zip })
+    getCardDetail({
+      card: selectedCard,
+      itemName: identification?.itemName ?? '',
+      category: identification?.category,
+      location,
+      zip,
+    })
       .then((res) => {
         if (!active) return;
         setCardDetail(res.detail, res.recommendation);

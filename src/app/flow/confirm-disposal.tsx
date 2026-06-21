@@ -19,7 +19,7 @@ import { haptics } from '@/utils/haptics';
  * we discard it and send them back to their options.
  */
 export default function ConfirmDisposalScreen() {
-  const { identification, selectedCard, location, photoBase64, reset } = useDisposalFlow();
+  const { identification, selectedCard, location, zip, photoBase64, reset } = useDisposalFlow();
   const { user } = useAuth();
   const [status, setStatus] = useState<'idle' | 'saving'>('idle');
   const [error, setError] = useState('');
@@ -29,7 +29,14 @@ export default function ConfirmDisposalScreen() {
     setStatus('saving');
     setError('');
     try {
-      await saveDisposalToHistory({ userId: user.id, photoBase64, identification, selectedCard, location });
+      await saveDisposalToHistory({
+        userId: user.id,
+        photoBase64,
+        identification,
+        selectedCard,
+        location,
+        zip,
+      });
       haptics.success();
       reset();
       router.replace('/(tabs)/history' as any);

@@ -150,8 +150,39 @@ class Recommendation(BaseModel):
 class CardDetailRequest(BaseModel):
     card: DisposalCard
     itemName: str
+    category: ItemCategory = "other"
     location: str = ""
     zip: str = ""
+
+
+# --- Redis agent memory (learned user preferences) -------------------------
+
+PreferenceEvent = Literal["card_selected", "disposal_completed", "service_search", "triage_home"]
+
+
+class PreferenceRecordRequest(BaseModel):
+    event: PreferenceEvent
+    itemName: str = ""
+    category: ItemCategory = "other"
+    disposalMethod: Optional[DisposalMethod] = None
+    decision: Optional[Decision] = None
+    location: str = ""
+    zip: str = ""
+
+
+class PreferenceTag(BaseModel):
+    id: str
+    label: str
+    tone: Literal["neutral", "donate", "sell", "discard", "accent"] = "neutral"
+    source: str = "history"
+
+
+class UserPreferenceMemoryResponse(BaseModel):
+    tags: List[PreferenceTag] = []
+    inferred: dict = {}
+    stats: dict = {}
+    recentEvents: List[dict] = []
+    updatedAt: Optional[str] = None
 
 
 class CardDetailResponse(BaseModel):

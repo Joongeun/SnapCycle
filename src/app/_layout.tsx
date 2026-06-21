@@ -18,6 +18,9 @@ import { DisposalProvider } from '@/contexts/disposal-context';
 import { OnboardingProvider, useOnboarding } from '@/contexts/onboarding-context';
 import { useAuth } from '@/hooks/use-auth';
 import { Colors } from '@/constants/theme';
+import { initSentry, Sentry } from '@/lib/sentry';
+
+initSentry();
 
 const NavTheme = {
   ...DefaultTheme,
@@ -76,7 +79,7 @@ function AuthGate() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded] = useFonts({
     Fraunces_600SemiBold,
     Fraunces_700Bold,
@@ -112,3 +115,5 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 }
+
+export default Sentry.wrap(RootLayout);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import * as Location from 'expo-location';
 
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Colors, Spacing, Typography } from '@/constants/theme';
+import { BorderRadius, Colors, FlatBorder, Spacing, Typography } from '@/constants/theme';
 import { useDisposalFlow } from '@/contexts/disposal-context';
 import { useOnboarding } from '@/contexts/onboarding-context';
 import { useAuth } from '@/hooks/use-auth';
@@ -16,8 +16,17 @@ import { useCamera } from '@/hooks/use-camera';
 import { researchLocation } from '@/services/api';
 import { saveOnboarding } from '@/services/onboarding';
 import { haptics } from '@/utils/haptics';
+import {
+  DECISION_OPTIONS,
+  EMPTY_PREFERENCES,
+  PICKUP_OPTIONS,
+  WASTE_TYPE_OPTIONS,
+  type PickupLocation,
+  type UserPreferences,
+} from '@/types/preferences';
+import type { Decision, ItemCategory } from '@/types/item';
 
-type Step = 'permissions' | 'address' | 'research';
+type Step = 'permissions' | 'address' | 'preferences' | 'research';
 
 export default function OnboardingScreen() {
   const { user } = useAuth();
@@ -31,9 +40,48 @@ export default function OnboardingScreen() {
   const [zip, setZip] = useState('');
   const [researchStatus, setResearchStatus] = useState<'idle' | 'running' | 'error'>('idle');
   const [error, setError] = useState('');
+  const [prefs, setPrefs] = useState<UserPreferences>(EMPTY_PREFERENCES);
 
   const composedLocation = [address.trim(), zip.trim()].filter(Boolean).join(', ') || zip.trim();
   const canResearch = zip.trim().length >= 5;
+
+  function toggleWasteType(category: ItemCategory) {
+    setPrefs((prev) => {
+      const has = prev.wasteTypes.includes(category);
+      return {
+        ...prev,
+        wasteTypes: has
+          ? prev.wasteTypes.filter((c) => c !== category)
+          : [...prev.wasteTypes, category],
+      };
+    });
+  }
+
+  function SelectChip({
+    label,
+    selected,
+    onPress,
+  }: {
+    label: string;
+    selected: boolean;
+    onPress: () => void;
+  }) {
+    return (
+      <Pressable
+        onPress={onPress}
+        style={[
+          styles.chip,
+          { backgroundColor: selected ? Colors.light.primary : Colors.light.backgroundElement },
+        ]}
+      >
+        <ThemedText
+          style={[Typography.captionBold, { color: selected ? '#FBF3E4' : Colors.light.text }]}
+        >
+          {label}
+        </ThemedText>
+      </Pressable>
+    );
+  }
 
   async function grantPermissions() {
     setError('');
@@ -71,7 +119,12 @@ export default function OnboardingScreen() {
     setError('');
     try {
       await researchLocation({ zip: zip.trim(), address: composedLocation });
-      await saveOnboarding(user.id, { address: address.trim(), zip: zip.trim(), location: composedLocation });
+      await saveOnboarding(user.id, {
+        address: address.trim(),
+        zip: zip.trim(),
+        location: composedLocation,
+        preferences: prefs,
+      });
       markComplete({ address: address.trim(), zip: zip.trim(), location: composedLocation });
       setLocation(composedLocation, zip.trim());
       haptics.success();
@@ -85,7 +138,12 @@ export default function OnboardingScreen() {
 
   async function skipResearch() {
     if (!user) return;
-    await saveOnboarding(user.id, { address: address.trim(), zip: zip.trim(), location: composedLocation });
+    await saveOnboarding(user.id, {
+      address: address.trim(),
+      zip: zip.trim(),
+      location: composedLocation,
+      preferences: prefs,
+    });
     markComplete({ address: address.trim(), zip: zip.trim(), location: composedLocation });
     setLocation(composedLocation, zip.trim());
     router.replace('/(tabs)' as any);
@@ -146,11 +204,77 @@ export default function OnboardingScreen() {
               </View>
               <View style={styles.footer}>
                 <Button
-                  title="Build my local guide"
+                  title="Continue"
                   size="lg"
                   disabled={!canResearch}
-                  onPress={runResearch}
+                  onPress={() => setStep('preferences')}
                 />
+              </View>
+            </>
+          )}
+
+          {step === 'preferences' && (
+            <>
+              <AgentMessage title="TELL US ABOUT YOU">
+                <ThemedText style={Typography.body}>
+                  Optional — we&apos;ll use this to personalize suggestions and show tags on your
+                  dashboard.
+                </ThemedText>
+              </AgentMessage>
+              <View style={styles.prefSection}>
+                <ThemedText style={styles.prefLabel}>PREFERRED PICKUP</ThemedText>
+                <View style={styles.chipRow}>
+                  {PICKUP_OPTIONS.map((opt) => (
+                    <SelectChip
+                      key={opt.value}
+                      label={opt.label}
+                      selected={prefs.pickupLocation === opt.value}
+                      onPress={() =>
+                        setPrefs((p) => ({
+                          ...p,
+                          pickupLocation:
+                            p.pickupLocation === opt.value ? null : (opt.value as PickupLocation),
+                        }))
+                      }
+                    />
+                  ))}
+                </View>
+              </View>
+              <View style={styles.prefSection}>
+                <ThemedText style={styles.prefLabel}>USUAL WASTE TYPES</ThemedText>
+                <View style={styles.chipRow}>
+                  {WASTE_TYPE_OPTIONS.map((opt) => (
+                    <SelectChip
+                      key={opt.value}
+                      label={opt.label}
+                      selected={prefs.wasteTypes.includes(opt.value)}
+                      onPress={() => toggleWasteType(opt.value)}
+                    />
+                  ))}
+                </View>
+              </View>
+              <View style={styles.prefSection}>
+                <ThemedText style={styles.prefLabel}>DEFAULT APPROACH</ThemedText>
+                <View style={styles.chipRow}>
+                  {DECISION_OPTIONS.map((opt) => (
+                    <SelectChip
+                      key={opt.value}
+                      label={opt.label}
+                      selected={prefs.preferredDecision === opt.value}
+                      onPress={() =>
+                        setPrefs((p) => ({
+                          ...p,
+                          preferredDecision:
+                            p.preferredDecision === opt.value ? null : (opt.value as Decision),
+                        }))
+                      }
+                    />
+                  ))}
+                </View>
+              </View>
+              <View style={styles.footer}>
+                <Button title="Build my local guide" size="lg" onPress={runResearch} />
+                <Button title="Skip for now" variant="ghost" onPress={skipResearch} />
               </View>
             </>
           )}
@@ -197,4 +321,21 @@ const styles = StyleSheet.create({
   block: { alignItems: 'center', gap: Spacing.three, paddingHorizontal: Spacing.two },
   center: { textAlign: 'center' },
   retry: { marginTop: Spacing.two },
+  prefSection: { gap: Spacing.two },
+  prefLabel: {
+    ...Typography.captionBold,
+    letterSpacing: 1,
+    color: Colors.light.textSecondary,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  chip: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    borderRadius: BorderRadius.full,
+    ...FlatBorder,
+  },
 });

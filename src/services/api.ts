@@ -18,9 +18,12 @@ import type {
   StartBidsRequest,
   TriageRequest,
   TriageResponse,
+  UserPreferenceMemory,
+  PreferenceRecordRequest,
 } from '@/types/api';
 import type { ItemCategory } from '@/types/item';
 import type { DisposalCard, Hauler } from '@/types/disposal';
+import { Sentry } from '@/lib/sentry';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
 const REQUEST_TIMEOUT_MS = 15000;
@@ -48,6 +51,7 @@ async function apiPost<T>(path: string, body: unknown): Promise<T> {
       signal: controller.signal,
     });
   } catch (e: any) {
+    Sentry.captureException(e, { tags: { api_path: path } });
     if (e?.name === 'AbortError') {
       throw new Error(`Can't reach the server (timed out). Check your connection and that the backend is running at ${API_URL}.`);
     }
@@ -62,10 +66,15 @@ async function apiPost<T>(path: string, body: unknown): Promise<T> {
       error.message ??
       (typeof error.detail === 'string' ? error.detail : null) ??
       `HTTP ${response.status}`;
+    captureApiError(path, response.status, message);
     throw new Error(message);
   }
 
   return response.json();
+}
+
+function captureApiError(path: string, status: number, message: string) {
+  Sentry.captureMessage(`API ${status}: ${path} — ${message}`, 'error');
 }
 
 async function apiGet<T>(path: string): Promise<T> {
@@ -153,4 +162,14 @@ export async function getHaulers(request: {
   itemName?: string;
 }): Promise<{ haulers: Hauler[] }> {
   return apiPost('/api/haulers', request);
+}
+
+export async function getPreferenceMemory(): Promise<UserPreferenceMemory> {
+  return apiGet('/api/preferences/memory');
+}
+
+export async function recordPreferenceMemory(
+  body: PreferenceRecordRequest,
+): Promise<UserPreferenceMemory> {
+  return apiPost('/api/preferences/record', body);
 }

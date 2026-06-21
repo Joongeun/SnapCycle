@@ -1,3 +1,5 @@
+import type { UserPreferences } from '@/types/preferences';
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -7,4 +9,7 @@ export interface UserProfile {
   sellCount: number;
   discardCount: number;
   defaultLocation?: string;
+  address?: string;
+  zip?: string;
+  preferences: UserPreferences;
 }

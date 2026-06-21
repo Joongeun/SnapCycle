@@ -29,6 +29,8 @@ from app.schemas.rrr import (
     StartBidsRequest,
     TriageRequest,
     TriageResponse,
+    PreferenceRecordRequest,
+    UserPreferenceMemoryResponse,
 )
 from app.services.agent_s import get_form_status, start_form_fill
 from app.services.rrr_card_agent import get_card_detail
@@ -41,6 +43,10 @@ from app.services.rrr_schedule import draft_schedule
 from app.services.rrr_service_discovery import discover_services
 from app.services.rrr_triage import triage_item
 from app.services.twilio_bids import get_bids, get_media, handle_inbound_sms, start_bids
+from app.services.user_preference_memory import (
+    get_user_preference_memory,
+    record_preference_event,
+)
 
 router = APIRouter()
 
@@ -79,10 +85,19 @@ async def triage(
 @router.post("/card-detail", response_model=CardDetailResponse)
 async def card_detail(
     body: CardDetailRequest,
-    _user_id: str = Depends(require_user_id),
+    user_id: str = Depends(require_user_id),
 ):
     """Two agents: research the chosen pathway, then recommend a course of action."""
     try:
+        await record_preference_event(
+            user_id,
+            event="card_selected",
+            item_name=body.itemName,
+            category=body.category,
+            disposal_method=body.card.method,
+            location=body.location,
+            zip_code=body.zip,
+        )
         return await get_card_detail(body)
     except Exception as exc:
         raise HTTPException(
@@ -143,13 +158,21 @@ async def identify_item(
 @router.post("/services", response_model=ServicesResponse)
 async def find_services(
     body: ServicesRequest,
-    _user_id: str = Depends(require_user_id),
+    user_id: str = Depends(require_user_id),
 ):
     """Browserbase deep search + Gemini service discovery (Redis cached)."""
     if body.decision not in ("DONATE", "SELL", "DISCARD"):
         raise HTTPException(status_code=400, detail="Invalid decision")
 
     try:
+        await record_preference_event(
+            user_id,
+            event="service_search",
+            item_name=body.itemName,
+            category=body.category,
+            decision=body.decision,
+            location=body.location,
+        )
         services = await discover_services(body)
         return ServicesResponse(services=services)
     except Exception as exc:
@@ -278,3 +301,32 @@ async def schedule_service(
             status_code=502,
             detail="Scheduling failed. Please try again.",
         ) from exc
+
+
+@router.get("/preferences/memory", response_model=UserPreferenceMemoryResponse)
+async def preferences_memory(
+    user_id: str = Depends(require_user_id),
+):
+    """Redis agent memory — inferred preferences from request history."""
+    data = await get_user_preference_memory(user_id)
+    return UserPreferenceMemoryResponse(**data)
+
+
+@router.post("/preferences/record", response_model=UserPreferenceMemoryResponse)
+async def preferences_record(
+    body: PreferenceRecordRequest,
+    user_id: str = Depends(require_user_id),
+):
+    """Record a disposal interaction into Redis long-term user memory."""
+    await record_preference_event(
+        user_id,
+        event=body.event,
+        item_name=body.itemName,
+        category=body.category,
+        disposal_method=body.disposalMethod,
+        decision=body.decision,
+        location=body.location,
+        zip_code=body.zip,
+    )
+    data = await get_user_preference_memory(user_id)
+    return UserPreferenceMemoryResponse(**data)

@@ -1,9 +1,11 @@
 import { supabase } from './supabase';
 import { uploadItemPhoto } from './storage';
+import { recordPreferenceMemory } from './preference-memory';
 import type { Decision, DecisionAnswers, Item, ItemCategory, ItemCondition, SelectedService } from '@/types/item';
 import type { IdentifyResponse } from '@/types/api';
 import type { DisposalCard, DisposalMethod } from '@/types/disposal';
 import type { UserProfile } from '@/types/user';
+import { parsePreferences } from '@/services/preferences';
 
 interface NewItemInput {
   userId: string;
@@ -100,8 +102,9 @@ export async function saveDisposalToHistory(params: {
   identification: IdentifyResponse;
   selectedCard: DisposalCard;
   location: string;
+  zip?: string;
 }): Promise<Item> {
-  const { userId, photoBase64, identification, selectedCard } = params;
+  const { userId, photoBase64, identification, selectedCard, location, zip } = params;
 
   let photoUrl: string | null = null;
   if (photoBase64) {
@@ -116,7 +119,7 @@ export async function saveDisposalToHistory(params: {
   const decision = METHOD_TO_DECISION[selectedCard.method] ?? 'DISCARD';
 
   try {
-    return await withTimeout(
+    const item = await withTimeout(
       createItem({
         userId,
         photoUrl,
@@ -139,6 +142,18 @@ export async function saveDisposalToHistory(params: {
       }),
       12000,
     );
+
+    recordPreferenceMemory({
+      event: 'disposal_completed',
+      itemName: identification.itemName,
+      category: identification.category,
+      disposalMethod: selectedCard.method,
+      decision,
+      location,
+      zip,
+    }).catch(() => {});
+
+    return item;
   } catch (e: any) {
     const why = e?.message === 'timeout' ? 'timed out' : (e?.message ?? 'failed');
     throw new Error(`Saving item ${why} (database insert).`);
@@ -180,6 +195,9 @@ export async function getProfile(userId: string): Promise<UserProfile | null> {
     sellCount: data.sell_count,
     discardCount: data.discard_count,
     defaultLocation: data.default_location ?? undefined,
+    address: data.address ?? undefined,
+    zip: data.zip ?? undefined,
+    preferences: parsePreferences(data.preferences),
   };
 }
 
