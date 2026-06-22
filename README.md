@@ -1,7 +1,7 @@
 # Snapcycle
 
 A mobile app that helps you responsibly get rid of large, awkward, or non-traditional
-items. Photograph an item, let AI identify it, and the app figures out the **simplest
+items (e.g., furniture, mattresses, household hazardous waste, etc.). Photograph an item, let AI identify it, and the app figures out the **simplest
 correct path**: throw it in the right home bin, or — if it needs special handling —
 research **real local disposal pathways** (donation, city bulky pickup, junk haulers,
 mattress/e-waste/HHW collectives, reuse events) grounded in **live web search**. It can
